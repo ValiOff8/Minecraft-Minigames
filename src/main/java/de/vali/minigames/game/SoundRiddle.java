@@ -8,7 +8,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /** A vanilla sound, its accepted answers, and hints ordered from vague to specific. */
-public record SoundRiddle(String soundId, String answer, List<String> hints, Set<String> aliases) {
+public record SoundRiddle(String soundId, String answer, List<String> hints, Set<String> aliases,
+        SoundDifficulty difficulty) {
     private static final Pattern SEPARATORS = Pattern.compile("[^\\p{L}\\p{N}]+");
 
     public SoundRiddle {
@@ -16,11 +17,19 @@ public record SoundRiddle(String soundId, String answer, List<String> hints, Set
         answer = requireText(answer, "answer");
         hints = List.copyOf(Objects.requireNonNull(hints, "hints"));
         aliases = Set.copyOf(Objects.requireNonNull(aliases, "aliases"));
+        Objects.requireNonNull(difficulty, "difficulty");
+        if (difficulty == SoundDifficulty.MIXED) {
+            throw new IllegalArgumentException("A sound must belong to one difficulty, not MIXED.");
+        }
         if (hints.isEmpty()) {
             throw new IllegalArgumentException("A sound riddle needs at least one hint.");
         }
         hints.forEach(hint -> requireText(hint, "hint"));
         aliases.forEach(alias -> requireText(alias, "alias"));
+    }
+
+    public SoundRiddle(String soundId, String answer, List<String> hints, Set<String> aliases) {
+        this(soundId, answer, hints, aliases, SoundDifficulty.EASY);
     }
 
     /** Matches an entire answer; mentioning an answer inside a sentence is insufficient. */

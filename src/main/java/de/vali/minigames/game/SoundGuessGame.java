@@ -1,5 +1,6 @@
 package de.vali.minigames.game;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -11,14 +12,14 @@ import java.util.UUID;
 import java.util.random.RandomGenerator;
 
 /**
- * Server-independent state for a single round of sound guessing.
+ * Server-independent state for an event containing one or more sound rounds.
  * All methods must be called on the Minecraft server thread.
  */
 public final class SoundGuessGame {
     private static final int TICKS_PER_SECOND = 20;
     private static final int REPLAY_COOLDOWN_TICKS = 5 * TICKS_PER_SECOND;
 
-    public enum Phase { IDLE, LOBBY, RUNNING }
+    public enum Phase { IDLE, LOBBY, RUNNING, BETWEEN_ROUNDS }
 
     public enum JoinResult { JOINED, ALREADY_JOINED, NO_LOBBY }
 
@@ -32,9 +33,16 @@ public final class SoundGuessGame {
     private final Map<UUID, Integer> hintIndexes = new HashMap<>();
     private final Map<UUID, Integer> nextReplayTicks = new HashMap<>();
     private final Set<UUID> replayVotes = new LinkedHashSet<>();
+    private final List<SoundRiddle> remainingRiddles = new ArrayList<>();
 
     private Phase phase = Phase.IDLE;
+    private SoundDifficulty difficulty = SoundDifficulty.EASY;
+    private List<SoundRiddle> eventRiddles = List.of();
     private SoundRiddle currentRiddle;
+    private String previousSoundId;
+    private int roundNumber;
+    private int totalRounds;
+    private int betweenRoundTicks;
     private int remainingTicks;
     private int roundDurationTicks;
     private int elapsedRoundTicks;
@@ -49,12 +57,28 @@ public final class SoundGuessGame {
     }
 
     public boolean openLobby(int lobbySeconds, int roundSeconds) {
+        return openLobby(lobbySeconds, roundSeconds, SoundDifficulty.EASY, 1, 10);
+    }
+
+    public boolean openLobby(int lobbySeconds, int roundSeconds, SoundDifficulty difficulty,
+            int totalRounds, int countdownSeconds) {
         requireRange(lobbySeconds, 1, 300, "lobbySeconds");
         requireRange(roundSeconds, 1, 600, "roundSeconds");
+        requireRange(totalRounds, 1, 100, "totalRounds");
+        requireRange(countdownSeconds, 1, 60, "countdownSeconds");
+        Objects.requireNonNull(difficulty, "difficulty");
+        List<SoundRiddle> selected = riddles.stream().filter(difficulty::includes).toList();
+        if (selected.isEmpty()) {
+            throw new IllegalArgumentException("No sounds are available for difficulty " + difficulty + ".");
+        }
         if (phase != Phase.IDLE) {
             return false;
         }
         reset();
+        this.difficulty = difficulty;
+        this.totalRounds = totalRounds;
+        eventRiddles = selected;
+        betweenRoundTicks = countdownSeconds * TICKS_PER_SECOND;
         phase = Phase.LOBBY;
         remainingTicks = lobbySeconds * TICKS_PER_SECOND;
         roundDurationTicks = roundSeconds * TICKS_PER_SECOND;
@@ -77,7 +101,7 @@ public final class SoundGuessGame {
         hintIndexes.remove(playerId);
         nextReplayTicks.remove(playerId);
         replayVotes.remove(playerId);
-        if (phase == Phase.RUNNING && participants.isEmpty()) {
+        if ((phase == Phase.RUNNING || phase == Phase.BETWEEN_ROUNDS) && participants.isEmpty()) {
             reset();
         }
         return true;
@@ -89,7 +113,7 @@ public final class SoundGuessGame {
             return TickResult.NONE;
         }
         remainingTicks--;
-        if (phase == Phase.LOBBY) {
+        if (phase == Phase.LOBBY || phase == Phase.BETWEEN_ROUNDS) {
             if (remainingTicks > 0) {
                 return TickResult.NONE;
             }
@@ -97,7 +121,9 @@ public final class SoundGuessGame {
                 reset();
                 return TickResult.NO_PARTICIPANTS;
             }
-            currentRiddle = riddles.get(random.nextInt(riddles.size()));
+            clearRoundState();
+            currentRiddle = drawRiddle();
+            roundNumber++;
             phase = Phase.RUNNING;
             remainingTicks = roundDurationTicks;
             elapsedRoundTicks = 0;
@@ -106,20 +132,45 @@ public final class SoundGuessGame {
 
         elapsedRoundTicks++;
         if (remainingTicks <= 0) {
-            reset();
+            finishRound();
             return TickResult.TIMED_OUT;
         }
         return TickResult.NONE;
     }
 
-    /** A successful guess ends the round immediately, so only one player can win. */
+    /** A successful guess ends only the current round; later rounds keep their participants. */
     public boolean guess(UUID playerId, String guess) {
         if (phase != Phase.RUNNING || !participants.contains(playerId)
                 || !currentRiddle.matching(guess)) {
             return false;
         }
-        reset();
+        finishRound();
         return true;
+    }
+
+    private SoundRiddle drawRiddle() {
+        if (remainingRiddles.isEmpty()) {
+            remainingRiddles.addAll(eventRiddles);
+        }
+        int index = random.nextInt(remainingRiddles.size());
+        // At a new pool cycle, avoid immediately repeating the preceding sound.
+        if (remainingRiddles.size() > 1
+                && remainingRiddles.get(index).soundId().equals(previousSoundId)) {
+            index = (index + 1 + random.nextInt(remainingRiddles.size() - 1)) % remainingRiddles.size();
+        }
+        SoundRiddle result = remainingRiddles.remove(index);
+        previousSoundId = result.soundId();
+        return result;
+    }
+
+    private void finishRound() {
+        if (roundNumber >= totalRounds) {
+            reset();
+            return;
+        }
+        clearRoundState();
+        phase = Phase.BETWEEN_ROUNDS;
+        remainingTicks = betweenRoundTicks;
     }
 
     public Optional<String> nextHint(UUID playerId) {
@@ -198,6 +249,18 @@ public final class SoundGuessGame {
         return phase;
     }
 
+    public SoundDifficulty difficulty() {
+        return difficulty;
+    }
+
+    public int roundNumber() {
+        return roundNumber;
+    }
+
+    public int totalRounds() {
+        return totalRounds;
+    }
+
     public int remainingSeconds() {
         return (remainingTicks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND;
     }
@@ -213,13 +276,24 @@ public final class SoundGuessGame {
 
     private void reset() {
         phase = Phase.IDLE;
-        currentRiddle = null;
+        clearRoundState();
         participants.clear();
+        remainingRiddles.clear();
+        eventRiddles = List.of();
+        previousSoundId = null;
+        difficulty = SoundDifficulty.EASY;
+        roundNumber = 0;
+        totalRounds = 0;
+        betweenRoundTicks = 0;
+        remainingTicks = 0;
+        roundDurationTicks = 0;
+    }
+
+    private void clearRoundState() {
+        currentRiddle = null;
         hintIndexes.clear();
         nextReplayTicks.clear();
         replayVotes.clear();
-        remainingTicks = 0;
-        roundDurationTicks = 0;
         elapsedRoundTicks = 0;
         nextSharedReplayTick = 0;
     }

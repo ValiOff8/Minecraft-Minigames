@@ -2,6 +2,7 @@ package de.vali.minigames.sound;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -36,7 +37,7 @@ class SoundGuessMinecraftIntegrationTest {
 
     @Test
     void everyCatalogSoundExistsInMinecraft() {
-        assertAll(SoundCatalog.DEFAULT_RIDDLES.stream().map(riddle -> () -> {
+        assertAll(SoundCatalog.ALL_RIDDLES.stream().map(riddle -> () -> {
             var id = Identifier.parse(riddle.soundId());
             var registered = BuiltInRegistries.SOUND_EVENT.get(id);
             assertTrue(registered.isPresent(), () -> "Unknown vanilla sound: " + id);
@@ -49,7 +50,8 @@ class SoundGuessMinecraftIntegrationTest {
     void administrationRequiresAtLeastOperatorLevelTwo(int level, boolean allowed) {
         var dispatcher = dispatcher();
         var source = source(LevelBasedPermissionSet.forLevel(PermissionLevel.byId(level)));
-        for (var command : new String[]{"minigame sound start", "minigame sound stop"}) {
+        for (var command : new String[]{"minigame sound start", "minigame sound start schwer 5",
+                "minigame sound stop"}) {
             assertEquals(allowed, fullyParsed(dispatcher.parse(command, source)), command);
         }
     }
@@ -77,6 +79,34 @@ class SoundGuessMinecraftIntegrationTest {
         var parsed = dispatcher().parse("minigame sound start " + lobby + " " + round,
                 source(LevelBasedPermissionSet.GAMEMASTER));
         assertEquals(valid, fullyParsed(parsed));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"leicht", "normal", "schwer", "gemischt", "easy", "hard", "mixed"})
+    void difficultiesSupportEveryOptionalSeriesArgument(String difficulty) {
+        var dispatcher = dispatcher();
+        var operator = source(LevelBasedPermissionSet.GAMEMASTER);
+        for (var settings : new String[]{"", " 5", " 5 15", " 5 15 60", " 5 15 60 10"}) {
+            var command = "minigame sound start " + difficulty + settings;
+            assertTrue(fullyParsed(dispatcher.parse(command, operator)), command);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"schwer 1 1 1 1, true", "gemischt 100 300 600 60, true",
+            "schwer 0, false", "schwer 101, false", "schwer -1, false",
+            "normal 5 0, false", "normal 5 301, false",
+            "leicht 5 15 0, false", "leicht 5 15 601, false",
+            "gemischt 5 15 60 0, false", "gemischt 5 15 60 61, false"})
+    void seriesCommandEnforcesEverySettingBound(String settings, boolean valid) {
+        assertEquals(valid, fullyParsed(dispatcher().parse("minigame sound start " + settings,
+                source(LevelBasedPermissionSet.GAMEMASTER))));
+    }
+
+    @Test
+    void unknownDifficultyIsRejected() {
+        assertFalse(fullyParsed(dispatcher().parse("minigame sound start expert 5",
+                source(LevelBasedPermissionSet.GAMEMASTER))));
     }
 
     private static CommandDispatcher<CommandSourceStack> dispatcher() {

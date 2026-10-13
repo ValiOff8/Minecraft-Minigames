@@ -2,8 +2,9 @@ package de.vali.minigames.game;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
-/** Small, curated catalog of distinctive sounds shipped with vanilla Minecraft. */
+/** Vanilla sounds grouped by how familiar and distinctive they are. */
 public final class SoundCatalog {
     public static final List<SoundRiddle> DEFAULT_RIDDLES = List.of(
             new SoundRiddle("minecraft:entity.cat.ambient", "Katze",
@@ -71,6 +72,139 @@ public final class SoundCatalog {
                             "Bei einem Gewitter hörst du es nach einem Blitz."),
                     Set.of("thunder", "Blitz", "lightning", "Gewitter"))
     );
+
+    public static final List<SoundRiddle> NORMAL_RIDDLES = List.of(
+            riddle(SoundDifficulty.NORMAL, "block.enchantment_table.use", "Verzauberungstisch",
+                    List.of("Dieser Ton gehört zu einem besonderen Arbeitsblock.",
+                            "Dabei werden Erfahrungspunkte verbraucht.",
+                            "Ein schwebendes Buch hilft beim Verbessern von Ausrüstung."),
+                    "enchanting table", "enchantment table", "Verzaubern", "enchanting"),
+            riddle(SoundDifficulty.NORMAL, "block.brewing_stand.brew", "Braustand",
+                    List.of("Hier wird etwas hergestellt.", "Glasflaschen und Zutaten spielen eine Rolle.",
+                            "Dieser Arbeitsblock stellt Tränke her."),
+                    "brewing stand", "Trank brauen", "Brauen", "brewing"),
+            riddle(SoundDifficulty.NORMAL, "block.piston.extend", "Kolben",
+                    List.of("Dieses Geräusch hängt mit Redstone zusammen.",
+                            "Ein Block bewegt andere Blöcke.", "Der bewegliche Arm fährt aus."),
+                    "piston", "Kolben ausfahren", "piston extend"),
+            riddle(SoundDifficulty.NORMAL, "block.bell.use", "Glocke",
+                    List.of("Dieser Ton dient auch als Warnsignal.", "Du findest den Block häufig in Dörfern.",
+                            "Dorfbewohner reagieren auf sein Läuten."),
+                    "bell", "Glocke läuten", "Läuten"),
+            riddle(SoundDifficulty.NORMAL, "block.portal.travel", "Netherportal",
+                    List.of("Dieser Ton begleitet eine Reise.", "Das Ziel liegt in einer anderen Dimension.",
+                            "Ein Rahmen aus Obsidian ermöglicht diesen Dimensionswechsel."),
+                    "nether portal", "Portal", "portal travel", "Netherportal reisen"),
+            riddle(SoundDifficulty.NORMAL, "block.beacon.activate", "Leuchtfeuer",
+                    List.of("Ein besonderer Block wird aktiviert.", "Dafür brauchst du eine Pyramide aus Metallblöcken.",
+                            "Ein Lichtstrahl ragt in den Himmel."),
+                    "beacon", "Leuchtfeuer aktivieren", "beacon activate"),
+            riddle(SoundDifficulty.NORMAL, "item.totem.use", "Totem der Unsterblichkeit",
+                    List.of("Dieser Gegenstand hilft in höchster Gefahr.", "Du musst ihn in einer Hand halten.",
+                            "Er verhindert einmal deinen Tod."),
+                    "Totem", "totem of undying", "totem use", "Unsterblichkeitstotem"),
+            riddle(SoundDifficulty.NORMAL, "entity.ender_eye.launch", "Enderauge",
+                    List.of("Ein Gegenstand wird in die Luft geworfen.", "Er zeigt dir eine bestimmte Richtung.",
+                            "So findest du die Festung mit dem Endportal."),
+                    "eye of ender", "ender eye", "Enderauge werfen"),
+            riddle(SoundDifficulty.NORMAL, "block.lava.extinguish", "Lava löschen",
+                    List.of("Zwei sehr unterschiedliche Flüssigkeiten begegnen sich.",
+                            "Eine davon ist äußerst heiß.", "Bei Kontakt mit Wasser wird daraus ein fester Block."),
+                    "Lava", "lava extinguish", "Lava abkühlen", "Lava und Wasser"),
+            riddle(SoundDifficulty.NORMAL, "block.honey_block.slide", "Honigblock",
+                    List.of("Dieses Geräusch entsteht beim Bewegen an einem Block.",
+                            "Die Oberfläche ist besonders klebrig.", "Der Baustoff stammt von Bienen."),
+                    "honey block", "Honigblock rutschen", "honey slide", "Honig"),
+            riddle(SoundDifficulty.NORMAL, "entity.witch.ambient", "Hexe",
+                    List.of("Dieses Wesen ist feindlich.", "Es verwendet Tränke im Kampf.",
+                            "Du kannst ihm in einer Hütte im Sumpf begegnen."),
+                    "witch", "Hexenlachen", "witch laugh"),
+            riddle(SoundDifficulty.NORMAL, "entity.guardian.ambient", "Wächter",
+                    List.of("Dieses Wesen lebt unter Wasser.", "Es bewacht ein Bauwerk im Ozean.",
+                            "Das stachelige Monster greift mit einem Strahl an."),
+                    "guardian", "Tempelwächter", "Ozeanwächter")
+    );
+
+    public static final List<SoundRiddle> HARD_RIDDLES = List.of(
+            riddle(SoundDifficulty.HARD, "block.conduit.attack.target", "Aquisator",
+                    List.of("Ein ungewöhnlicher Block greift an.", "Er wird mit Prismarin unter Wasser aktiviert.",
+                            "Sein Rezept enthält ein Herz des Meeres und Nautilusschalen."),
+                    "conduit", "Aquisator Angriff", "conduit attack"),
+            riddle(SoundDifficulty.HARD, "block.respawn_anchor.charge", "Respawnanker",
+                    List.of("Ein Block wird aufgeladen.", "Dafür wird Leuchtstein verwendet.",
+                            "Mit ihm lässt sich der Wiedereinstiegspunkt im Nether festlegen."),
+                    "respawn anchor", "Wiederbelebungsanker", "Respawnanker aufladen", "respawn anchor charge"),
+            riddle(SoundDifficulty.HARD, "block.lodestone.place", "Leitstein",
+                    List.of("Ein besonderer Block wird platziert.", "Ein Kompass kann daran gebunden werden.",
+                            "Der Kompass zeigt anschließend zu diesem Block."),
+                    "lodestone", "Leitstein platzieren", "lodestone place"),
+            riddle(SoundDifficulty.HARD, "block.sculk_sensor.clicking", "Sculk-Sensor",
+                    List.of("Etwas reagiert auf eine Bewegung in der Umgebung.",
+                            "Der Block kommt in der tiefen Dunkelheit vor.",
+                            "Er erkennt Vibrationen und gibt ein Redstone-Signal ab."),
+                    "sculk sensor", "Sculksensor", "Sculk Sensor klicken"),
+            riddle(SoundDifficulty.HARD, "block.sculk_shrieker.shriek", "Sculk-Kreischer",
+                    List.of("Dieser Ton ist eine bedrohliche Warnung.", "Er kommt aus der tiefen Dunkelheit.",
+                            "Wiederholtes Auslösen dieses Blocks kann den Warden herbeirufen."),
+                    "sculk shrieker", "Sculkkreischer", "Kreischer"),
+            riddle(SoundDifficulty.HARD, "block.amethyst_block.resonate", "Amethystblock",
+                    List.of("Ein mineralischer Block erzeugt einen klingenden Ton.",
+                            "Das Material findest du in Geoden.", "Es handelt sich um einen violetten Kristall."),
+                    "amethyst block", "Amethyst", "Amethyst Resonanz", "amethyst resonate"),
+            riddle(SoundDifficulty.HARD, "block.pointed_dripstone.drip_water", "Spitzer Tropfstein",
+                    List.of("Dieses leise Geräusch kommt aus einer Höhle.", "Wasser tropft von einer Spitze.",
+                            "Unter dem hängenden Block kann sich ein Kessel langsam füllen."),
+                    "pointed dripstone", "Tropfstein", "Tropfstein tropft", "dripstone water"),
+            riddle(SoundDifficulty.HARD, "entity.turtle.egg_crack", "Schildkrötenei",
+                    List.of("Etwas Kleines beginnt aufzubrechen.", "Du findest es meist auf Sand am Strand.",
+                            "Daraus schlüpft später ein Tier mit Panzer."),
+                    "turtle egg", "Schildkrötenei knackt", "turtle egg crack"),
+            riddle(SoundDifficulty.HARD, "block.trial_spawner.spawn_mob", "Prüfungsspawner",
+                    List.of("Ein Block lässt ein Wesen erscheinen.", "Du findest ihn in unterirdischen Prüfungskammern.",
+                            "Besiegte Gegner und eine Abklingzeit gehören zu dieser besonderen Herausforderung."),
+                    "trial spawner", "Prüfungs Spawner", "trial spawner spawn", "Prüfungsspawner spawnt"),
+            riddle(SoundDifficulty.HARD, "block.vault.activate", "Tresor",
+                    List.of("Ein besonderer Behälter wird aktiv.", "Er kommt in Prüfungskammern vor.",
+                            "Mit einem Prüfungsschlüssel erhältst du daraus Beute."),
+                    "vault", "Tresor aktivieren", "vault activate"),
+            riddle(SoundDifficulty.HARD, "item.brush.brushing.generic", "Pinsel",
+                    List.of("Ein Werkzeug wird behutsam benutzt.", "Du suchst damit nach verborgenen Fundstücken.",
+                            "Bei der Archäologie befreit es Gegenstände aus verdächtigen Blöcken."),
+                    "brush", "Bürste", "Pinseln", "Bürsten", "brushing"),
+            riddle(SoundDifficulty.HARD, "item.bundle.insert", "Bündel",
+                    List.of("Etwas wird in einen tragbaren Behälter gelegt.",
+                            "Darin können unterschiedliche Gegenstände zusammen aufbewahrt werden.",
+                            "Dieser kleine Inventarhelfer wird aus Leder und Faden hergestellt."),
+                    "bundle", "Bündel befüllen", "bundle insert"),
+            riddle(SoundDifficulty.HARD, "item.goat_horn.sound.0", "Ziegenhorn Nachdenken",
+                    List.of("Ein Instrument wird geblasen.", "Es stammt von einem Tier aus den Bergen.",
+                            "Gesucht ist das Horn mit der Melodie Nachdenken."),
+                    "Ziegenhorn", "goat horn", "Nachdenken", "ponder", "goat horn ponder"),
+            riddle(SoundDifficulty.HARD, "entity.sniffer.digging", "Schnüffler",
+                    List.of("Ein Tier gräbt im Boden.", "Es sucht nach uralten Samen.",
+                            "Dieses große Wesen kannst du aus einem bei der Archäologie gefundenen Ei ausbrüten."),
+                    "sniffer", "Schnüffler graben", "sniffer digging"),
+            riddle(SoundDifficulty.HARD, "entity.armadillo.roll", "Gürteltier",
+                    List.of("Ein kleines Tier schützt sich vor Gefahr.", "Es lebt unter anderem in Savannen.",
+                            "Es rollt sich ein und liefert Hornschilde für Wolfsrüstung."),
+                    "armadillo", "Gürteltier einrollen", "armadillo roll"),
+            riddle(SoundDifficulty.HARD, "block.decorated_pot.insert", "Verzierter Krug",
+                    List.of("Etwas wird in ein Gefäß hineingelegt.", "Scherben können seine Außenseiten verzieren.",
+                            "Dieser keramische Block hat einen kleinen Stauraum für Gegenstände."),
+                    "decorated pot", "Verzierter Topf", "Verzierter Krug befüllen", "decorated pot insert")
+    );
+
+    public static final List<SoundRiddle> ALL_RIDDLES = Stream.of(
+            DEFAULT_RIDDLES, NORMAL_RIDDLES, HARD_RIDDLES).flatMap(List::stream).toList();
+
+    public static List<SoundRiddle> forDifficulty(SoundDifficulty difficulty) {
+        return ALL_RIDDLES.stream().filter(difficulty::includes).toList();
+    }
+
+    private static SoundRiddle riddle(SoundDifficulty difficulty, String soundId, String answer,
+            List<String> hints, String... aliases) {
+        return new SoundRiddle("minecraft:" + soundId, answer, hints, Set.of(aliases), difficulty);
+    }
 
     private SoundCatalog() {
     }

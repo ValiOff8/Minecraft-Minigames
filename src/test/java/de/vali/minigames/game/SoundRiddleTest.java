@@ -72,7 +72,7 @@ class SoundRiddleTest {
     void defaultCatalogHasUniqueVanillaSoundIdsAndUsableAnswers() {
         Set<String> soundIds = new HashSet<>();
         assertTrue(SoundCatalog.DEFAULT_RIDDLES.size() >= 15);
-        for (SoundRiddle sound : SoundCatalog.DEFAULT_RIDDLES) {
+        for (SoundRiddle sound : SoundCatalog.ALL_RIDDLES) {
             assertTrue(sound.soundId().startsWith("minecraft:"));
             assertTrue(soundIds.add(sound.soundId()), sound.soundId());
             assertTrue(sound.matching(sound.answer()));

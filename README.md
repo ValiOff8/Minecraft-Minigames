@@ -2,7 +2,7 @@
 
 Eine Fabric-Mod für einen dedizierten Minecraft-Server mit zwei Minispielen:
 
-- **Sound erraten:** Alle angemeldeten Spieler hören denselben zufällig ausgewählten Minecraft-Sound. Wer als Erstes die richtige Antwort in den öffentlichen Chat schreibt, gewinnt.
+- **Sound erraten:** Alle angemeldeten Spieler hören denselben zufällig ausgewählten Minecraft-Sound. Wer als Erstes die richtige Antwort in den öffentlichen Chat schreibt, gewinnt die Runde. Schwierigkeit und Anzahl der aufeinanderfolgenden Runden sind einstellbar.
 - **Hide and Seek:** Ein Spieler versteckt sich, ein anderer sucht. Während der Versteckzeit wartet der Sucher mit Blindheit am Startpunkt. Nametag und Positionsmarker des Versteckers bleiben bis zum Rundenende verborgen.
 
 Die Mod verwendet ausschließlich vorhandene Minecraft-Sounds. Auf den Clients ist keine zusätzliche Mod erforderlich. Die bisherigen Projekte im übergeordneten Verzeichnis gehören nicht zu dieser Mod.
@@ -34,7 +34,7 @@ Unter Linux oder macOS:
 ./gradlew build
 ```
 
-Der Build erzeugt `build/libs/server-minigames-1.2.0.jar`. Diese JAR zusammen mit der passenden Fabric-API-JAR in den Ordner `mods/` des Fabric-Servers kopieren und den Server neu starten. Beim Aktualisieren die alte Mod-JAR ersetzen. Die zusätzliche `-sources.jar` dient zur Einsicht in den Quellcode und wird nicht installiert.
+Der Build erzeugt `build/libs/server-minigames-1.3.0.jar`. Diese JAR zusammen mit der passenden Fabric-API-JAR in den Ordner `mods/` des Fabric-Servers kopieren und den Server neu starten. Beim Aktualisieren die alte Mod-JAR ersetzen. Die zusätzliche `-sources.jar` dient zur Einsicht in den Quellcode und wird nicht installiert.
 
 ## Sound erraten: Schnellstart
 
@@ -43,6 +43,16 @@ Ein Operator öffnet die Anmeldung; die Standardwerte sind 15 Sekunden Anmeldung
 ```text
 /minigame sound start
 ```
+
+Für eine Serie aus fünf schweren Runden:
+
+```text
+/minigame sound start schwer 5
+```
+
+Zur Auswahl stehen `leicht`, `normal`, `schwer` und `gemischt` (englische Aliase: `easy`, `normal`, `hard`, `mixed`). Ohne Angaben wird eine leichte Runde gespielt. Nach jeder gelösten oder abgelaufenen Runde startet ein Countdown von standardmäßig zehn Sekunden, dann ertönt der nächste Sound. Alle Teilnehmer bleiben für die gesamte Serie angemeldet.
+
+Der Katalog enthält 44 Sounds: 16 leichte, 12 normale und 16 schwere. Zu den schwierigeren Beispielen gehören Aquisator-Angriff, Sculk-Sensor, Respawnanker, Tropfstein, Prüfungsspawner und das Befüllen eines verzierten Krugs. Jeder Sound hat passende deutsche und englische Antworten sowie persönliche Tipps. `Gemischt` kombiniert alle Schwierigkeitsstufen.
 
 Spieler treten während der Anmeldung bei:
 
@@ -66,6 +76,7 @@ Mit `/minigame sound abstimmen` stimmen Teilnehmer dafür, den Sound erneut für
 | `/minigame` | Hilfe zu den Minispielen anzeigen. |
 | `/minigame sound` | Hilfe zu „Sound erraten“ anzeigen. |
 | `/minigame sound start [anmeldezeit] [rundenzeit]` | Anmeldung öffnen; Zeiten in Sekunden. Erfordert Operator-Stufe 2 oder die Serverkonsole. |
+| `/minigame sound start <schwierigkeit> [runden] [anmeldezeit] [rundenzeit] [countdown]` | Eine Serie mit gewähltem Sound-Pool und Rundenzahl starten. Erfordert Operator-Stufe 2 oder die Serverkonsole. |
 | `/minigame sound beitreten` | Während der Anmeldung teilnehmen. Alias: `join`. |
 | `/minigame sound verlassen` | Anmeldung oder laufende Runde verlassen. Alias: `leave`. |
 | `/minigame sound tipp` | Während der Runde einen privaten, schrittweise deutlicheren Tipp erhalten. Alias: `hint`. |
@@ -74,19 +85,24 @@ Mit `/minigame sound abstimmen` stimmen Teilnehmer dafür, den Sound erneut für
 | `/minigame sound status` | Aktuellen Spielstatus anzeigen. |
 | `/minigame sound stop` | Anmeldung oder Runde abbrechen. Erfordert Operator-Stufe 2 oder die Serverkonsole. |
 
-Die Anmeldezeit muss zwischen 1 und 300 Sekunden liegen, die Rundenzeit zwischen 1 und 600 Sekunden. Zum Beispiel öffnet `/minigame sound start 30 90` eine Anmeldung für 30 Sekunden mit einer anschließenden Runde von 90 Sekunden. In der Serverkonsole werden Befehle ohne den führenden Schrägstrich eingegeben.
+Die Anmeldezeit muss zwischen 1 und 300 Sekunden liegen, die Rundenzeit zwischen 1 und 600 Sekunden. Eine Serie umfasst 1 bis 100 Runden; der Countdown zwischen den Runden beträgt 1 bis 60 Sekunden. Die Standardwerte sind eine Runde, 15 Sekunden Anmeldung, 60 Sekunden pro Sound und zehn Sekunden zwischen den Runden.
+
+Zum Beispiel startet `/minigame sound start schwer 5 20 90 8` fünf schwere Runden mit 20 Sekunden Anmeldung, 90 Sekunden Ratezeit pro Sound und acht Sekunden Pause. Der bisherige Befehl `/minigame sound start 30 90` öffnet weiterhin eine Anmeldung für 30 Sekunden mit einer leichten Runde von 90 Sekunden. In der Serverkonsole werden Befehle ohne den führenden Schrägstrich eingegeben.
 
 ## Sound erraten: Spielregeln
 
-- Es läuft höchstens eine Runde „Sound erraten“ gleichzeitig. Die Teilnahme ist freiwillig; jeder Spieler kann nur einmal beitreten. Nach Beginn des Sounds ist ein Beitritt erst zur nächsten Runde möglich.
+- Es läuft höchstens ein Sound-Event gleichzeitig. Die Teilnahme ist freiwillig; jeder Spieler kann nur einmal beitreten. Angemeldete Spieler bleiben über alle Runden dabei. Nach der anfänglichen Anmeldung ist ein Beitritt erst zum nächsten Event möglich.
 - Nur Antworten angemeldeter Teilnehmer im normalen öffentlichen Chat zählen. Befehle wie `/say`, `/me` und `/msg` zählen nicht als Antworten.
 - Geprüft wird die gesamte Nachricht. Groß- und Kleinschreibung, Leerzeichen und Satzzeichen werden vereinheitlicht. Umlaute und ihre Schreibweisen `ae`, `oe`, `ue` sowie `ß` und `ss` werden gleichbehandelt. Passende deutsche und englische Bezeichnungen sowie die jeweilige Minecraft-Sound-ID werden akzeptiert.
 - Die erste richtige Antwort, die beim Server ankommt, beendet die Runde und wird mit dem Gewinner bekanntgegeben. Es gibt noch keine Belohnungen oder Punkteliste.
+- Nach einer richtigen Antwort oder einem Zeitablauf läuft der eingestellte Countdown bis zum nächsten Sound. Nach der eingestellten Rundenzahl endet das Event automatisch. Ein Zeitablauf zählt als gespielte Runde. Während des Countdowns zählen keine Antworten, Tipps oder Wiederholungsstimmen.
+- Innerhalb des gewählten Sound-Pools werden zuerst alle Sounds in zufälliger Reihenfolge gespielt. Erst dann wird der Vorrat neu gemischt; bei mehreren verfügbaren Sounds wird auch am Übergang kein Sound unmittelbar wiederholt.
+- Tipps, persönliche Wiederholungswartezeiten und sämtliche Abstimmungsstimmen werden für jeden neuen Sound zurückgesetzt.
 - Tipps und persönliches erneutes Abspielen sind nur während der laufenden Runde für Teilnehmer verfügbar und werden nur dem jeweiligen Spieler angezeigt beziehungsweise abgespielt.
 - Bei der gemeinsamen Wiederholung zählt jeder Teilnehmer höchstens einmal. Stimmen bleiben bis zur erfolgreichen Abstimmung oder bis zum Rundenende bestehen. Nach der Wiederholung werden sie zurückgesetzt; nach fünf Spielsekunden kann die nächste Abstimmung beginnen. Die Rundenzeit läuft unverändert weiter, und die persönliche Wiederholung bleibt unabhängig davon verfügbar.
 - Beim Austritt oder Verbindungsabbruch wird die Stimme dieses Spielers entfernt und die Mehrheit unter den verbleibenden Teilnehmern neu berechnet. Ist sie dadurch erreicht, hören alle verbleibenden Teilnehmer den Sound erneut. Bei nur einem Teilnehmer genügt dessen eigene Stimme.
 - Wenn die Zeit abläuft, wird die Lösung bekanntgegeben. Beim manuellen Abbruch wird sie nur aufgedeckt, wenn der Sound bereits gestartet wurde.
-- Eine Anmeldung bleibt bis zum Ablauf der Anmeldezeit offen, auch wenn alle bisher angemeldeten Spieler sie verlassen oder die Verbindung trennen. Andere Spieler können noch beitreten; ohne Teilnehmer startet keine Runde. Verlassen während einer laufenden Runde alle Teilnehmer das Spiel oder trennen die Verbindung, endet diese Runde sofort und die Lösung wird bekanntgegeben.
+- Eine Anmeldung bleibt bis zum Ablauf der Anmeldezeit offen, auch wenn alle bisher angemeldeten Spieler sie verlassen oder die Verbindung trennen. Andere Spieler können noch beitreten; ohne Teilnehmer startet keine Runde. Verlassen während einer laufenden Runde oder eines Zwischen-Countdowns alle Teilnehmer das Spiel, endet das gesamte Event sofort. Bei einem noch laufenden Sound wird die Lösung bekanntgegeben. `/minigame sound stop` bricht ebenfalls die gesamte Serie ab.
 
 Vanilla-Untertitel können einen Sound verraten; Ressourcenpakete können seine Wiedergabe verändern. Der Server kann diese Client-Einstellungen nicht verhindern. Für ein faires Spiel sollten sich die Teilnehmer vorab auf passende Einstellungen einigen.
 
@@ -135,7 +151,7 @@ Es gibt keine festgelegte Arena, automatische Teleportation zu einer Arena, Belo
 
 ## Weitere Minispiele ergänzen
 
-Die aktuelle Version wurde mit 100 automatisierten Tests geprüft. Ein Fabric-Starttest hat außerdem die Mod-Registrierung und das Anwenden des Sichtschutz-Mixins auf Minecraft 26.3 bestätigt; er endete vor dem Weltstart. Ein Sichttest mit zwei echten Spielern steht noch aus.
+Die Spielregeln, Rundenserien, Schwierigkeitsfilter, Befehle, Sound-IDs und Hide-and-Seek-Attribute werden automatisiert geprüft. Ein Fabric-Starttest hat außerdem die Mod-Registrierung und das Anwenden des Sichtschutz-Mixins auf Minecraft 26.3 bestätigt; er endete vor dem Weltstart. Ein Sichttest mit zwei echten Spielern steht noch aus.
 
 Der Quellcode liegt unter `src/main/java/de/vali/minigames/`:
 
@@ -146,6 +162,7 @@ Der Quellcode liegt unter `src/main/java/de/vali/minigames/`:
 | `sound.SoundGuessMinigame` | Anbindung von „Sound erraten“ an Server, Befehle, Chat und Soundwiedergabe. |
 | `game.SoundGuessGame` | Spielzustand und Regeln unabhängig von der Minecraft-Anbindung. |
 | `game.SoundCatalog` | Auswahl vorhandener Sounds mit akzeptierten Antworten und Tipps. |
+| `game.SoundDifficulty` | Auswahl und Filterung der Schwierigkeitsstufen. |
 | `game.SoundRiddle` | Ein Soundrätsel mit Sound-ID, Lösung, Tipps und Antwortvergleich. |
 | `hideandseek.HideAndSeekMinigame` | Befehle, Rollen, Finden durch Anklicken und Anbindung an Serverereignisse. |
 | `game.HideAndSeekGame` | Phasen, Zeitgrenzen und Siegbedingungen von Hide and Seek unabhängig von Minecraft. |
