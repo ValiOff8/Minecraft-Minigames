@@ -1,0 +1,77 @@
+package de.vali.minigames.game;
+
+import java.util.List;
+import java.util.Set;
+
+/** Small, curated catalog of distinctive sounds shipped with vanilla Minecraft. */
+public final class SoundCatalog {
+    public static final List<SoundRiddle> DEFAULT_RIDDLES = List.of(
+            new SoundRiddle("minecraft:entity.cat.ambient", "Katze",
+                    List.of("Dieses Tier kann als Haustier gehalten werden.",
+                            "Es jagt gern Mäuse und macht Miau."),
+                    Set.of("cat", "meow", "miauen", "Katzenmiauen")),
+            new SoundRiddle("minecraft:entity.wolf.ambient", "Wolf",
+                    List.of("Dieses Tier lebt unter anderem im Wald.",
+                            "Mit Knochen kannst du es zähmen."),
+                    Set.of("wolf", "Hund", "dog", "bellen", "bark")),
+            new SoundRiddle("minecraft:entity.cow.ambient", "Kuh",
+                    List.of("Dieses friedliche Tier findest du oft auf Wiesen.",
+                            "Mit einem Eimer bekommst du von ihm Milch."),
+                    Set.of("cow", "Rind", "muh", "moo", "muhen")),
+            new SoundRiddle("minecraft:entity.pig.ambient", "Schwein",
+                    List.of("Dieses friedliche Tier hat vier Beine.",
+                            "Es ist rosa und lässt sich mit einer Karottenrute lenken."),
+                    Set.of("pig", "oink", "grunzen")),
+            new SoundRiddle("minecraft:entity.sheep.ambient", "Schaf",
+                    List.of("Dieses friedliche Tier kann viele Farben haben.",
+                            "Mit einer Schere bekommst du seine Wolle."),
+                    Set.of("sheep", "mäh", "maeh", "baa", "blöken")),
+            new SoundRiddle("minecraft:entity.chicken.ambient", "Huhn",
+                    List.of("Dieses Tier flattert und ist häufig auf Wiesen zu finden.",
+                            "Es legt Eier."),
+                    Set.of("chicken", "Hühnchen", "Hahn", "gackern", "cluck")),
+            new SoundRiddle("minecraft:entity.villager.ambient", "Dorfbewohner",
+                    List.of("Dieses Wesen lebt in einer Siedlung.",
+                            "Du kannst mit ihm gegen Smaragde handeln."),
+                    Set.of("villager", "Dorfbewohnergeräusch", "hmm", "hmmm")),
+            new SoundRiddle("minecraft:entity.zombie.ambient", "Zombie",
+                    List.of("Dieses feindliche Wesen ist oft nachts unterwegs.",
+                            "Es ist grün, trägt meist ein blaues Oberteil und verbrennt im Sonnenlicht."),
+                    Set.of("zombie", "Zombiestöhnen", "zombie groan")),
+            new SoundRiddle("minecraft:entity.skeleton.ambient", "Skelett",
+                    List.of("Dieses feindliche Wesen begegnet dir oft nachts.",
+                            "Es besteht aus Knochen und schießt mit einem Bogen."),
+                    Set.of("skeleton", "Knochenklappern", "skeleton rattle")),
+            new SoundRiddle("minecraft:entity.creeper.primed", "Creeper",
+                    List.of("Dieser Ton kündigt unmittelbar Gefahr an.",
+                            "Ein grünes Monster zündet sich zur Explosion."),
+                    Set.of("creeper", "Creeper zündet", "creeper primed", "Creeperzischen")),
+            new SoundRiddle("minecraft:entity.enderman.scream", "Enderman",
+                    List.of("Dieses Wesen kann sich teleportieren.",
+                            "Es ist groß und schwarz und mag keinen direkten Blickkontakt."),
+                    Set.of("enderman", "Endermanschrei", "enderman scream")),
+            new SoundRiddle("minecraft:entity.ghast.ambient", "Ghast",
+                    List.of("Dieses Wesen lebt im Nether.",
+                            "Es ist groß und weiß, schwebt und schießt Feuerbälle."),
+                    Set.of("ghast", "Ghastschrei", "ghast cry")),
+            new SoundRiddle("minecraft:block.anvil.land", "Amboss",
+                    List.of("Hier ist etwas Schweres auf dem Boden gelandet.",
+                            "An diesem Metallblock kannst du Gegenstände reparieren und umbenennen."),
+                    Set.of("anvil", "fallender Amboss", "anvil land", "Amboss landet")),
+            new SoundRiddle("minecraft:block.chest.open", "Truhe",
+                    List.of("Dieser Ton gehört zu einem Block mit Stauraum.",
+                            "Der Deckel eines hölzernen Behälters wird geöffnet."),
+                    Set.of("chest", "Kiste", "Truhe öffnen", "chest open")),
+            new SoundRiddle("minecraft:entity.experience_orb.pickup", "Erfahrungskugel",
+                    List.of("Diesen Ton hörst du beim Einsammeln von etwas.",
+                            "Eine kleine grüne Kugel füllt deine Erfahrungsleiste."),
+                    Set.of("experience orb", "xp orb", "XP", "Erfahrung", "Erfahrungspunkte")),
+            new SoundRiddle("minecraft:entity.lightning_bolt.thunder", "Donner",
+                    List.of("Dieses Geräusch kommt aus der Natur.",
+                            "Bei einem Gewitter hörst du es nach einem Blitz."),
+                    Set.of("thunder", "Blitz", "lightning", "Gewitter"))
+    );
+
+    private SoundCatalog() {
+    }
+}

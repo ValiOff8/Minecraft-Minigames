@@ -1,0 +1,50 @@
+# Gradle caches and generated build output
+.gradle/
+build/
+out/
+bin/
+*.class
+
+# Generated archives; the Gradle Wrapper belongs in version control
+*.jar
+!/gradle/wrapper/gradle-wrapper.jar
+
+# Local JDK, downloaded tools, dependencies and research files
+.tools/
+
+# Minecraft development servers, worlds, logs and crash reports
+run/
+runs/
+logs/
+crash-reports/
+.mixin.out/
+.fabric/
+*.log
+*.log.gz
+
+# IntelliJ IDEA, VS Code and Eclipse workspace files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+
+# Machine-specific settings and environment variables
+local.properties
+gradle.local.properties
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Operating system and editor temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
