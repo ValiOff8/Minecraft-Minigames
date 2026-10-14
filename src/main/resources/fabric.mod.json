@@ -3,7 +3,7 @@
   "id": "server_minigames",
   "version": "${version}",
   "name": "Server Minigames",
-  "description": "Server-Minispiele per Chat-Befehl: Sound erraten und Hide and Seek.",
+  "description": "Server-Minispiele per Chat-Befehl: Sound erraten, Hide and Seek und Item-Rennen.",
   "environment": "server",
   "entrypoints": {
     "main": ["de.vali.minigames.ServerMinigamesMod"]

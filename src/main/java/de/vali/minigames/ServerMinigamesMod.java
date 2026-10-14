@@ -2,6 +2,7 @@ package de.vali.minigames;
 
 import de.vali.minigames.api.ServerMinigame;
 import de.vali.minigames.hideandseek.HideAndSeekMinigame;
+import de.vali.minigames.itemrace.ItemRaceMinigame;
 import de.vali.minigames.sound.SoundGuessMinigame;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,6 +33,7 @@ public final class ServerMinigamesMod implements ModInitializer {
     @Override
     public void onInitialize() {
         register(new SoundGuessMinigame());
+        register(new ItemRaceMinigame());
         var hideAndSeek = new HideAndSeekMinigame();
         register(hideAndSeek);
 

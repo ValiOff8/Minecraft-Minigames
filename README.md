@@ -1,11 +1,12 @@
 # Server-Minispiele für Minecraft 26.3
 
-Eine Fabric-Mod für einen dedizierten Minecraft-Server mit zwei Minispielen:
+Eine Fabric-Mod für einen dedizierten Minecraft-Server mit drei Minispielen:
 
 - **Sound erraten:** Alle angemeldeten Spieler hören denselben zufällig ausgewählten Minecraft-Sound. Wer als Erstes die richtige Antwort in den öffentlichen Chat schreibt, gewinnt die Runde. Schwierigkeit und Anzahl der aufeinanderfolgenden Runden sind einstellbar.
 - **Hide and Seek:** Ein Spieler versteckt sich, ein anderer sucht. Während der Versteckzeit wartet der Sucher mit Blindheit am Startpunkt. Nametag und Positionsmarker des Versteckers bleiben bis zum Rundenende verborgen.
+- **Item-Rennen:** Zwei Spieler erhalten dieselbe zufällige Liste von Survival-Items. Wer zuerst von jedem Item ein Exemplar gesammelt hat, gewinnt. Listengröße und Schwierigkeit sind vor dem Start einstellbar.
 
-Die Mod verwendet ausschließlich vorhandene Minecraft-Sounds. Auf den Clients ist keine zusätzliche Mod erforderlich. Die bisherigen Projekte im übergeordneten Verzeichnis gehören nicht zu dieser Mod.
+Die Mod verwendet ausschließlich vorhandene Minecraft-Sounds und -Items. Auf den Clients ist keine zusätzliche Mod erforderlich. Die bisherigen Projekte im übergeordneten Verzeichnis gehören nicht zu dieser Mod.
 
 ## Voraussetzungen
 
@@ -34,7 +35,7 @@ Unter Linux oder macOS:
 ./gradlew build
 ```
 
-Der Build erzeugt `build/libs/server-minigames-1.3.0.jar`. Diese JAR zusammen mit der passenden Fabric-API-JAR in den Ordner `mods/` des Fabric-Servers kopieren und den Server neu starten. Beim Aktualisieren die alte Mod-JAR ersetzen. Die zusätzliche `-sources.jar` dient zur Einsicht in den Quellcode und wird nicht installiert.
+Der Build erzeugt `build/libs/server-minigames-1.4.0.jar`. Diese JAR zusammen mit der passenden Fabric-API-JAR in den Ordner `mods/` des Fabric-Servers kopieren und den Server neu starten. Beim Aktualisieren die alte Mod-JAR ersetzen. Die zusätzliche `-sources.jar` dient zur Einsicht in den Quellcode und wird nicht installiert.
 
 ## Sound erraten: Schnellstart
 
@@ -149,9 +150,40 @@ Die Versteckzeit muss zwischen 1 und 300 Sekunden liegen, die Suchzeit zwischen 
 
 Es gibt keine festgelegte Arena, automatische Teleportation zu einer Arena, Belohnungen oder Punkteliste. Die Spieler wählen ihren Spielbereich selbst.
 
+## Item-Rennen: Schnellstart
+
+Ein Operator startet ein Rennen zwischen zwei verschiedenen Spielern, hier mit zehn normalen Items:
+
+```text
+/minigame itemrace start Alice Bob 10 normal
+```
+
+Beide Spieler müssen online, lebend und im Überlebensmodus sein. Das Rennen beginnt sofort; beide erhalten dieselbe zufällige Liste ohne doppelte Items. Von jedem Ziel genügt ein Exemplar. Ohne weitere Angaben startet `/minigame itemrace start Alice Bob` mit fünf leichten Items. Eine Schwierigkeit kann auch ohne Anzahl angegeben werden, zum Beispiel `/minigame itemrace start Alice Bob schwer`.
+
+Die Listengröße ist von 1 bis 30 einstellbar. Zur Auswahl stehen `leicht`/`easy`, `normal`, `schwer`/`hard` und `gemischt`/`mixed`. Die drei getrennten Pools enthalten jeweils 36 Items; `gemischt` wählt aus allen 108. Leichte Ziele umfassen häufige Materialien und einfache Rezepte, normale Ziele erfordern mehr Bergbau, Landwirtschaft oder Herstellung. Schwere Ziele können Nether-, End- oder Bossfortschritt voraussetzen. Alle Ziele sind grundsätzlich in Vanilla-Survival erhältlich; die Auswahl berücksichtigt die konkrete Welt und den bisherigen Spielfortschritt nicht.
+
+## Item-Rennen: Befehle
+
+| Befehl | Wirkung |
+| --- | --- |
+| `/minigame itemrace` | Hilfe zum Item-Rennen anzeigen. |
+| `/minigame itemrace start <Spieler1> <Spieler2> [Anzahl] [Schwierigkeit]` | Zwei Spieler auswählen und sofort starten. Standard: fünf leichte Items. Erfordert Operator-Stufe 2 oder die Serverkonsole. |
+| `/minigame itemrace liste` | Als Teilnehmer die eigene Liste mit abgehakten Zielen anzeigen. Alias: `list`. |
+| `/minigame itemrace status` | Schwierigkeit, Listengröße und Sammelfortschritt beider Spieler anzeigen. |
+| `/minigame itemrace verlassen` | Als Teilnehmer das gesamte Rennen abbrechen. Alias: `leave`. |
+| `/minigame itemrace stop` | Das Rennen abbrechen. Erfordert Operator-Stufe 2 oder die Serverkonsole. |
+
+## Item-Rennen: Spielregeln
+
+- Es läuft höchstens ein Item-Rennen gleichzeitig, mit genau zwei Teilnehmern. Wer zuerst alle Ziele gesammelt hat, gewinnt. Vervollständigen beide ihre Liste im selben Server-Tick, endet das Rennen unentschieden.
+- Am Ende jedes Server-Ticks wird das aktuelle Spielerinventar einschließlich Schnellzugriffsleiste, Nebenhand und angelegter Ausrüstung geprüft. Bereits vor dem Start vorhandene Items zählen mit. Ziele werden dauerhaft für dieses Rennen abgehakt; die Items dürfen danach verwendet, abgelegt oder verloren werden und müssen nicht gleichzeitig im Inventar liegen.
+- Inhalte von Bündeln, Shulkerkisten und anderen verschachtelten Behältern werden nicht durchsucht. Endertruhen, externe Behälter und der am Mauszeiger gehaltene Inventarstapel zählen ebenfalls nicht. Ein Item muss bei einer Inventarprüfung im Spielerinventar liegen.
+- Tod und Wiederbelebung löschen den Sammelfortschritt nicht. Dimensionswechsel, Schlafen und Reittiere sind erlaubt. Verbindungsabbruch, Verlassen oder Wechsel aus dem Überlebensmodus brechen das gesamte Rennen ohne Gewinner ab.
+- Ein manueller Abbruch oder das Herunterfahren des Servers setzt das Rennen ohne Gewinner zurück. Es gibt keine Zeitgrenze und keine Belohnungen.
+
 ## Weitere Minispiele ergänzen
 
-Die Spielregeln, Rundenserien, Schwierigkeitsfilter, Befehle, Sound-IDs und Hide-and-Seek-Attribute werden automatisiert geprüft. Ein Fabric-Starttest hat außerdem die Mod-Registrierung und das Anwenden des Sichtschutz-Mixins auf Minecraft 26.3 bestätigt; er endete vor dem Weltstart. Ein Sichttest mit zwei echten Spielern steht noch aus.
+Die Spielregeln, Rundenserien, Schwierigkeitsfilter, Befehle, Sound- und Item-IDs, Sammelfortschritt und Hide-and-Seek-Attribute werden automatisiert geprüft. Ein Fabric-Starttest hat außerdem die Mod-Registrierung und das Anwenden des Sichtschutz-Mixins auf Minecraft 26.3 bestätigt; er endete vor dem Weltstart. Ein Sichttest mit zwei echten Spielern steht noch aus.
 
 Der Quellcode liegt unter `src/main/java/de/vali/minigames/`:
 
@@ -169,5 +201,9 @@ Der Quellcode liegt unter `src/main/java/de/vali/minigames/`:
 | `hideandseek.HideAndSeekProtection` | Vorübergehender Sichtschutz, Blindheit, Festhalten des Suchers und Wiederherstellung. |
 | `hideandseek.HideAndSeekVisibility` | Hält fest, welcher Sucher den Verstecker während der Versteckzeit nicht sehen darf. |
 | `mixin.HideAndSeekPlayerMixin` | Unterbindet die Übertragung des Spielermodells an den Sucher während der Versteckzeit. |
+| `itemrace.ItemRaceMinigame` | Befehle, Inventarprüfung, Fortschrittsanzeige und Serverereignisse des Item-Rennens. |
+| `game.ItemRaceGame` | Gemeinsame Zielliste, dauerhafter Sammelfortschritt und Siegbedingungen unabhängig von Minecraft. |
+| `game.ItemRaceCatalog` | Getrennte Survival-Item-Pools und zufällige Auswahl ohne Wiederholungen. |
+| `game.ItemRaceDifficulty` | Deutsche und englische Namen der Schwierigkeitsstufen des Item-Rennens. |
 
 Für ein weiteres Minispiel `ServerMinigame` implementieren und die Instanz in `ServerMinigamesMod` registrieren. Zusätzliche erratbare Sounds werden im `SoundCatalog` mit Minecraft-Sound-ID, Antwortbezeichnungen und Tipps ergänzt.
