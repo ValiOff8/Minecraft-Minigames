@@ -44,18 +44,18 @@ public final class HideAndSeekMinigame implements ServerMinigame {
                 .then(Commands.literal("start")
                         .requires(source -> source.permissions()
                                 .hasPermission(Permissions.COMMANDS_GAMEMASTER))
-                        .then(Commands.argument("sucher", EntityArgument.player())
-                                .then(Commands.argument("verstecker", EntityArgument.player())
+                        .then(Commands.argument("seeker", EntityArgument.player())
+                                .then(Commands.argument("hider", EntityArgument.player())
                                         .executes(context -> start(context,
                                                 DEFAULT_HIDING_SECONDS, DEFAULT_SEEKING_SECONDS))
-                                        .then(Commands.argument("versteckzeit", IntegerArgumentType.integer(1, 300))
+                                        .then(Commands.argument("hide_seconds", IntegerArgumentType.integer(1, 300))
                                                 .executes(context -> start(context,
-                                                        IntegerArgumentType.getInteger(context, "versteckzeit"),
+                                                        IntegerArgumentType.getInteger(context, "hide_seconds"),
                                                         DEFAULT_SEEKING_SECONDS))
-                                                .then(Commands.argument("suchzeit", IntegerArgumentType.integer(1, 1800))
+                                                .then(Commands.argument("seek_seconds", IntegerArgumentType.integer(1, 1800))
                                                         .executes(context -> start(context,
-                                                                IntegerArgumentType.getInteger(context, "versteckzeit"),
-                                                                IntegerArgumentType.getInteger(context, "suchzeit"))))))))
+                                                                IntegerArgumentType.getInteger(context, "hide_seconds"),
+                                                                IntegerArgumentType.getInteger(context, "seek_seconds"))))))))
                 .then(Commands.literal("bereit").executes(context -> ready(context.getSource())))
                 .then(Commands.literal("ready").executes(context -> ready(context.getSource())))
                 .then(Commands.literal("verlassen").executes(context -> leave(context.getSource())))
@@ -68,11 +68,11 @@ public final class HideAndSeekMinigame implements ServerMinigame {
     }
 
     private int help(CommandSourceStack source) {
-        source.sendSuccess(() -> text("Verstecken für zwei Spieler. "
-                + "Operator: /minigame hideandseek start <Sucher> <Verstecker> [Versteckzeit] [Suchzeit]. "
-                + "Verstecker: /minigame hideandseek bereit. "
-                + "Weitere Befehle: status | verlassen | stop (Operator). "
-                + "Gefunden wird durch Anklicken aus höchstens drei Blöcken Entfernung."), false);
+        source.sendSuccess(() -> text("Hide and Seek for two players. "
+                + "Operator: /minigame hideandseek start <seeker> <hider> [hide_seconds] [seek_seconds]. "
+                + "Hider: /minigame hideandseek ready. "
+                + "Other commands: status | leave | stop (operator). "
+                + "Find the hider by clicking them from at most three blocks away."), false);
         return 1;
     }
 
@@ -80,44 +80,44 @@ public final class HideAndSeekMinigame implements ServerMinigame {
             throws CommandSyntaxException {
         var source = context.getSource();
         if (game.phase() != HideAndSeekGame.Phase.IDLE) {
-            return error(source, "Es läuft bereits eine Runde Hide and Seek.");
+            return error(source, "A Hide and Seek round is already running.");
         }
-        var newSeeker = EntityArgument.getPlayer(context, "sucher");
-        var newHider = EntityArgument.getPlayer(context, "verstecker");
+        var newSeeker = EntityArgument.getPlayer(context, "seeker");
+        var newHider = EntityArgument.getPlayer(context, "hider");
         if (newSeeker == newHider) {
-            return error(source, "Sucher und Verstecker müssen zwei verschiedene Spieler sein.");
+            return error(source, "The seeker and hider must be two different players.");
         }
         if (!eligible(newSeeker) || !eligible(newHider)) {
-            return error(source, "Beide Spieler müssen lebend, wach und ohne Reittier "
-                    + "im Überlebens- oder Abenteuermodus sein.");
+            return error(source, "Both players must be alive, awake, and not riding anything "
+                    + "in Survival or Adventure mode.");
         }
         if (newSeeker.level() != newHider.level()) {
-            return error(source, "Beide Spieler müssen in derselben Dimension sein.");
+            return error(source, "Both players must be in the same dimension.");
         }
         game.open(newSeeker.getUUID(), newHider.getUUID(), hidingSeconds, seekingSeconds);
         seeker = newSeeker;
         hider = newHider;
         dimension = newSeeker.level().dimension();
-        broadcast(source.getServer(), "Neue Runde! Sucher: " + seeker.getName().getString()
-                + ", Verstecker: " + hider.getName().getString() + ".");
-        hider.sendSystemMessage(text("Du versteckst dich. Starte innerhalb von 60 Sekunden mit "
-                + "/minigame hideandseek bereit. Ab dann hast du " + hidingSeconds
-                + " Sekunden zum Verstecken; danach wird " + seekingSeconds + " Sekunden gesucht."));
-        seeker.sendSystemMessage(text("Du suchst. Sobald der Verstecker bereit ist, "
-                + "bekommst du Blindheit und wartest am Startpunkt, bis die Versteckzeit vorbei ist."));
+        broadcast(source.getServer(), "New round! Seeker: " + seeker.getName().getString()
+                + ", hider: " + hider.getName().getString() + ".");
+        hider.sendSystemMessage(text("You are hiding. Start within 60 seconds with "
+                + "/minigame hideandseek ready. You will then have " + hidingSeconds
+                + " seconds to hide, followed by " + seekingSeconds + " seconds of seeking."));
+        seeker.sendSystemMessage(text("You are seeking. Once the hider is ready, "
+                + "you will get Blindness and wait at the starting position until the hiding phase ends."));
         return 1;
     }
 
     private int ready(CommandSourceStack source) throws CommandSyntaxException {
         var player = source.getPlayerOrException();
         if (game.phase() != HideAndSeekGame.Phase.WAITING_READY) {
-            return error(source, "Gerade wartet keine Runde auf die Bereitschaft des Versteckers.");
+            return error(source, "No round is waiting for the hider to be ready.");
         }
         if (!game.hider().orElseThrow().equals(player.getUUID())) {
-            return error(source, "Nur der ausgewählte Verstecker kann die Versteckzeit starten.");
+            return error(source, "Only the selected hider can start the hiding phase.");
         }
         if (!participantsValid(source.getServer())) {
-            finish(source.getServer(), "Runde abgebrochen: Die Spieler sind nicht mehr spielbereit.", null);
+            finish(source.getServer(), "Round canceled: The players are no longer ready to play.", null);
             return 0;
         }
         try {
@@ -125,38 +125,38 @@ public final class HideAndSeekMinigame implements ServerMinigame {
             game.ready(player.getUUID());
             protection.beginHiding();
         } catch (RuntimeException exception) {
-            LOGGER.error("Hide-and-Seek-Schutz konnte nicht gestartet werden", exception);
-            finish(source.getServer(), "Runde abgebrochen: Der Sichtschutz konnte nicht aktiviert werden.", null);
+            LOGGER.error("Could not start Hide and Seek protection", exception);
+            finish(source.getServer(), "Round canceled: Visibility protection could not be enabled.", null);
             return 0;
         }
-        seeker.sendSystemMessage(text("Augen zu! Du wartest noch " + game.remainingSeconds()
-                + " Sekunden am Startpunkt. Der Verstecker wird dir währenddessen nicht angezeigt."));
-        hider.sendSystemMessage(text("Los, versteck dich! Du hast " + game.remainingSeconds()
-                + " Sekunden. Dein Nametag und Positionsmarker sind jetzt verborgen."));
+        seeker.sendSystemMessage(text("Eyes closed! Wait another " + game.remainingSeconds()
+                + " seconds at the starting position. The hider is invisible to you during this phase."));
+        hider.sendSystemMessage(text("Go hide! You have " + game.remainingSeconds()
+                + " seconds. Your name tag and location marker are now hidden."));
         return 1;
     }
 
     private int leave(CommandSourceStack source) throws CommandSyntaxException {
         var player = source.getPlayerOrException();
         if (!game.isParticipant(player.getUUID())) {
-            return error(source, "Du nimmst an keiner Runde Hide and Seek teil.");
+            return error(source, "You are not taking part in a Hide and Seek round.");
         }
-        finish(source.getServer(), player.getName().getString() + " hat die Runde verlassen. "
-                + "Hide and Seek wurde abgebrochen.", null);
+        finish(source.getServer(), player.getName().getString() + " left the round. "
+                + "Hide and Seek was canceled.", null);
         return 1;
     }
 
     private int status(CommandSourceStack source) {
         String phase = switch (game.phase()) {
-            case IDLE -> "Gerade läuft keine Runde Hide and Seek.";
-            case WAITING_READY -> "Warten auf /minigame hideandseek bereit: ";
-            case HIDING -> "Versteckzeit: ";
-            case SEEKING -> "Suchzeit: ";
+            case IDLE -> "No Hide and Seek round is running.";
+            case WAITING_READY -> "Waiting for /minigame hideandseek ready: ";
+            case HIDING -> "Hiding time: ";
+            case SEEKING -> "Seeking time: ";
         };
         String description = phase;
         if (game.phase() != HideAndSeekGame.Phase.IDLE) {
-            description += game.remainingSeconds() + " Sekunden. Sucher: "
-                    + seeker.getName().getString() + ", Verstecker: " + hider.getName().getString() + ".";
+            description += game.remainingSeconds() + " seconds. Seeker: "
+                    + seeker.getName().getString() + ", hider: " + hider.getName().getString() + ".";
         }
         String message = description;
         source.sendSuccess(() -> text(message), false);
@@ -165,9 +165,9 @@ public final class HideAndSeekMinigame implements ServerMinigame {
 
     private int stop(CommandSourceStack source) {
         if (game.phase() == HideAndSeekGame.Phase.IDLE) {
-            return error(source, "Gerade läuft keine Runde Hide and Seek.");
+            return error(source, "No Hide and Seek round is running.");
         }
-        finish(source.getServer(), "Hide and Seek wurde vom Operator abgebrochen.", null);
+        finish(source.getServer(), "Hide and Seek was canceled by an operator.", null);
         return 1;
     }
 
@@ -177,8 +177,8 @@ public final class HideAndSeekMinigame implements ServerMinigame {
             return;
         }
         if (!participantsValid(server)) {
-            finish(server, "Hide and Seek abgebrochen: Ein Spieler ist nicht mehr verfügbar, "
-                    + "hat die Dimension oder den Spielmodus gewechselt.", null);
+            finish(server, "Hide and Seek canceled: A player is no longer available, "
+                    + "changed dimension, or changed game mode.", null);
             return;
         }
         if (game.phase() == HideAndSeekGame.Phase.HIDING) {
@@ -187,23 +187,23 @@ public final class HideAndSeekMinigame implements ServerMinigame {
         int previousSeconds = game.remainingSeconds();
         switch (game.tick()) {
             case READY_TIMED_OUT -> finish(server,
-                    "Hide and Seek abgesagt: Der Verstecker hat sich nicht rechtzeitig bereitgemeldet.", null);
+                    "Hide and Seek canceled: The hider did not get ready in time.", null);
             case SEEKING_STARTED -> {
                 protection.beginSeeking();
-                seeker.sendSystemMessage(text("Du darfst jetzt suchen! Du hast " + game.remainingSeconds()
-                        + " Sekunden. Klicke den Verstecker aus nächster Nähe an, um zu gewinnen."));
-                hider.sendSystemMessage(text("Die Suche beginnt! Nametag und Positionsmarker bleiben verborgen."));
+                seeker.sendSystemMessage(text("You can seek now! You have " + game.remainingSeconds()
+                        + " seconds. Click the hider at close range to win."));
+                hider.sendSystemMessage(text("Seeking begins! Your name tag and location marker stay hidden."));
             }
             case HIDER_WON -> finish(server, hider.getName().getString()
-                    + " hat als Verstecker gewonnen! Die Suchzeit ist abgelaufen.", null);
+                    + " wins as the hider! Seeking time has run out.", null);
             case NONE -> {
                 int seconds = game.remainingSeconds();
                 if (seconds != previousSeconds && seconds > 0
                         && (seconds <= 5 || game.phase() == HideAndSeekGame.Phase.SEEKING
                         && (seconds == 30 || seconds == 10))) {
-                    sendToParticipants("Noch " + seconds + " Sekunden "
-                            + (game.phase() == HideAndSeekGame.Phase.HIDING ? "Versteckzeit." :
-                            game.phase() == HideAndSeekGame.Phase.SEEKING ? "Suchzeit." : "zum Bereitmelden."));
+                    sendToParticipants("Only " + seconds + " seconds left "
+                            + (game.phase() == HideAndSeekGame.Phase.HIDING ? "to hide." :
+                            game.phase() == HideAndSeekGame.Phase.SEEKING ? "to seek." : "to get ready."));
                 }
             }
         }
@@ -220,7 +220,7 @@ public final class HideAndSeekMinigame implements ServerMinigame {
                 && actor.distanceToSqr(target) <= 9.0 && actor.hasLineOfSight(target)
                 && game.tag(actor.getUUID(), target.getUUID())) {
             finish(actor.level().getServer(), actor.getName().getString()
-                    + " hat " + target.getName().getString() + " gefunden und gewinnt!", null);
+                    + " found " + target.getName().getString() + " and wins!", null);
         }
         // Touching during the round never deals combat damage between these two players.
         return true;
@@ -228,15 +228,15 @@ public final class HideAndSeekMinigame implements ServerMinigame {
 
     public void onDeath(MinecraftServer server, ServerPlayer player) {
         if (game.isParticipant(player.getUUID())) {
-            finish(server, "Hide and Seek abgebrochen: " + player.getName().getString() + " ist gestorben.", null);
+            finish(server, "Hide and Seek canceled: " + player.getName().getString() + " died.", null);
         }
     }
 
     @Override
     public void onDisconnect(MinecraftServer server, ServerPlayer player) {
         if (game.isParticipant(player.getUUID())) {
-            finish(server, "Hide and Seek abgebrochen: " + player.getName().getString()
-                    + " hat den Server verlassen.", player.getUUID());
+            finish(server, "Hide and Seek canceled: " + player.getName().getString()
+                    + " left the server.", player.getUUID());
         }
     }
 
@@ -277,7 +277,7 @@ public final class HideAndSeekMinigame implements ServerMinigame {
                 protection.close(disconnectedId);
             }
         } catch (RuntimeException exception) {
-            LOGGER.error("Fehler beim Wiederherstellen des Hide-and-Seek-Schutzes", exception);
+            LOGGER.error("Could not restore Hide and Seek protection", exception);
         } finally {
             protection = null;
             seeker = null;

@@ -17,7 +17,9 @@ import net.minecraft.commands.Commands;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
@@ -152,6 +154,19 @@ class ItemRaceMinecraftIntegrationTest {
     @Test
     void emptyInventoryContainsNoItemIds() {
         assertTrue(ItemRaceMinigame.inventoryItemIds(new SimpleContainer(6)).isEmpty());
+    }
+
+    @Test
+    void itemNamesAreEnglishLiteralsRatherThanClientTranslations() {
+        assertEquals("Iron Ingot", ItemRaceMinigame.itemName("minecraft:iron_ingot").getString());
+        assertEquals("White Wool", ItemRaceMinigame.itemName("minecraft:white_wool").getString());
+        assertEquals("Nether Star", ItemRaceMinigame.itemName("minecraft:nether_star").getString());
+        for (var itemId : ItemRaceCatalog.pool(ItemRaceDifficulty.MIXED)) {
+            var item = BuiltInRegistries.ITEM.get(Identifier.parse(itemId)).orElseThrow().value();
+            assertTrue(Language.DEFAULT_INSTANCE.has(item.getDescriptionId()), itemId);
+            assertFalse(ItemRaceMinigame.itemName(itemId).getContents() instanceof TranslatableContents,
+                    "Client language must not change the displayed item name: " + itemId);
+        }
     }
 
     private static ItemStack stack(Item item, int count) {

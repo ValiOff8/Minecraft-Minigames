@@ -40,8 +40,8 @@ public final class ServerMinigamesMod implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, selection) -> {
             var root = Commands.literal("minigame").executes(context -> {
                 context.getSource().sendSuccess(() -> Component.literal(
-                        "[Minispiele] Verfügbar: " + String.join(", ", minigames.keySet())
-                                + ". Hilfe: /minigame <Spiel>"), false);
+                        "[Minigames] Available: " + String.join(", ", minigames.keySet())
+                                + ". Help: /minigame <game>"), false);
                 return 1;
             });
             minigames.values().forEach(game -> root.then(game.commands()));
@@ -83,7 +83,7 @@ public final class ServerMinigamesMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPED.register(server ->
                 minigames.values().forEach(ServerMinigame::reset));
 
-        LOGGER.info("Server Minigames geladen: {}", minigames.keySet());
+        LOGGER.info("Server Minigames loaded: {}", minigames.keySet());
     }
 
     private static InteractionResult tag(HideAndSeekMinigame game, Player player, Entity target) {
@@ -96,7 +96,7 @@ public final class ServerMinigamesMod implements ModInitializer {
 
     private void register(ServerMinigame game) {
         if (minigames.putIfAbsent(game.id(), game) != null) {
-            throw new IllegalArgumentException("Doppelte Minispiel-ID: " + game.id());
+            throw new IllegalArgumentException("Duplicate minigame ID: " + game.id());
         }
     }
 }

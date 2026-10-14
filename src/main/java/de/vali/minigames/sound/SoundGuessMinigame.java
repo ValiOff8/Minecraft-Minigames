@@ -42,18 +42,18 @@ public final class SoundGuessMinigame implements ServerMinigame {
                                 .hasPermission(Permissions.COMMANDS_GAMEMASTER))
                         .executes(context -> start(context.getSource(),
                                 DEFAULT_LOBBY_SECONDS, DEFAULT_ROUND_SECONDS))
-                        .then(Commands.argument("anmeldezeit", IntegerArgumentType.integer(1, 300))
+                        .then(Commands.argument("signup_seconds", IntegerArgumentType.integer(1, 300))
                                 .executes(context -> start(context.getSource(),
-                                        IntegerArgumentType.getInteger(context, "anmeldezeit"),
+                                        IntegerArgumentType.getInteger(context, "signup_seconds"),
                                         DEFAULT_ROUND_SECONDS))
-                                .then(Commands.argument("rundenzeit", IntegerArgumentType.integer(1, 600))
+                                .then(Commands.argument("guess_seconds", IntegerArgumentType.integer(1, 600))
                                         .executes(context -> start(context.getSource(),
-                                                IntegerArgumentType.getInteger(context, "anmeldezeit"),
-                                                IntegerArgumentType.getInteger(context, "rundenzeit")))));
+                                                IntegerArgumentType.getInteger(context, "signup_seconds"),
+                                                IntegerArgumentType.getInteger(context, "guess_seconds")))));
         for (var difficulty : SoundDifficulty.values()) {
             startCommand.then(configuredStartCommand(difficulty, difficulty.commandName()));
-            if (!difficulty.englishName().equals(difficulty.commandName())) {
-                startCommand.then(configuredStartCommand(difficulty, difficulty.englishName()));
+            if (!difficulty.germanName().equals(difficulty.commandName())) {
+                startCommand.then(configuredStartCommand(difficulty, difficulty.germanName()));
             }
         }
         return Commands.literal(id())
@@ -78,28 +78,28 @@ public final class SoundGuessMinigame implements ServerMinigame {
 
     private LiteralArgumentBuilder<CommandSourceStack> configuredStartCommand(
             SoundDifficulty difficulty, String name) {
-        var countdown = Commands.argument("countdown", IntegerArgumentType.integer(1, 60))
+        var countdown = Commands.argument("countdown_seconds", IntegerArgumentType.integer(1, 60))
                 .executes(context -> start(context.getSource(),
-                        IntegerArgumentType.getInteger(context, "anmeldezeit"),
-                        IntegerArgumentType.getInteger(context, "rundenzeit"), difficulty,
-                        IntegerArgumentType.getInteger(context, "runden"),
-                        IntegerArgumentType.getInteger(context, "countdown")));
-        var roundTime = Commands.argument("rundenzeit", IntegerArgumentType.integer(1, 600))
+                        IntegerArgumentType.getInteger(context, "signup_seconds"),
+                        IntegerArgumentType.getInteger(context, "guess_seconds"), difficulty,
+                        IntegerArgumentType.getInteger(context, "rounds"),
+                        IntegerArgumentType.getInteger(context, "countdown_seconds")));
+        var roundTime = Commands.argument("guess_seconds", IntegerArgumentType.integer(1, 600))
                 .executes(context -> start(context.getSource(),
-                        IntegerArgumentType.getInteger(context, "anmeldezeit"),
-                        IntegerArgumentType.getInteger(context, "rundenzeit"), difficulty,
-                        IntegerArgumentType.getInteger(context, "runden"), DEFAULT_COUNTDOWN_SECONDS))
+                        IntegerArgumentType.getInteger(context, "signup_seconds"),
+                        IntegerArgumentType.getInteger(context, "guess_seconds"), difficulty,
+                        IntegerArgumentType.getInteger(context, "rounds"), DEFAULT_COUNTDOWN_SECONDS))
                 .then(countdown);
-        var lobbyTime = Commands.argument("anmeldezeit", IntegerArgumentType.integer(1, 300))
+        var lobbyTime = Commands.argument("signup_seconds", IntegerArgumentType.integer(1, 300))
                 .executes(context -> start(context.getSource(),
-                        IntegerArgumentType.getInteger(context, "anmeldezeit"),
+                        IntegerArgumentType.getInteger(context, "signup_seconds"),
                         DEFAULT_ROUND_SECONDS, difficulty,
-                        IntegerArgumentType.getInteger(context, "runden"), DEFAULT_COUNTDOWN_SECONDS))
+                        IntegerArgumentType.getInteger(context, "rounds"), DEFAULT_COUNTDOWN_SECONDS))
                 .then(roundTime);
-        var rounds = Commands.argument("runden", IntegerArgumentType.integer(1, 100))
+        var rounds = Commands.argument("rounds", IntegerArgumentType.integer(1, 100))
                 .executes(context -> start(context.getSource(), DEFAULT_LOBBY_SECONDS,
                         DEFAULT_ROUND_SECONDS, difficulty,
-                        IntegerArgumentType.getInteger(context, "runden"), DEFAULT_COUNTDOWN_SECONDS))
+                        IntegerArgumentType.getInteger(context, "rounds"), DEFAULT_COUNTDOWN_SECONDS))
                 .then(lobbyTime);
         return Commands.literal(name)
                 .executes(context -> start(context.getSource(), DEFAULT_LOBBY_SECONDS,
@@ -108,11 +108,11 @@ public final class SoundGuessMinigame implements ServerMinigame {
     }
 
     private int help(CommandSourceStack source) {
-        source.sendSuccess(() -> text("Errate den Minecraft-Sound! "
-                + "Befehle: /minigame sound beitreten | verlassen | tipp | nochmal | abstimmen | status. "
-                + "Operator: /minigame sound start <leicht|normal|schwer|gemischt> "
-                + "[Runden] [Anmeldezeit] [Rundenzeit] [Countdown] oder stop. "
-                + "Beispiel: /minigame sound start schwer 5"), false);
+        source.sendSuccess(() -> text("Guess the Minecraft sound! "
+                + "Commands: /minigame sound join | leave | hint | replay | vote | status. "
+                + "Operator: /minigame sound start <easy|normal|hard|mixed> "
+                + "[rounds] [signup_seconds] [guess_seconds] [countdown_seconds] or stop. "
+                + "Example: /minigame sound start hard 5"), false);
         return 1;
     }
 
@@ -123,12 +123,12 @@ public final class SoundGuessMinigame implements ServerMinigame {
     private int start(CommandSourceStack source, int lobbySeconds, int roundSeconds,
             SoundDifficulty difficulty, int rounds, int countdownSeconds) {
         if (!game.openLobby(lobbySeconds, roundSeconds, difficulty, rounds, countdownSeconds)) {
-            return error(source, "Es läuft bereits ein Sound-Event. Nutze /minigame sound status.");
+            return error(source, "A Sound Guess game is already running. Use /minigame sound status.");
         }
-        broadcast(source.getServer(), "Ein Sound-Event startet in " + lobbySeconds
-                + " Sekunden! Beitreten: /minigame sound beitreten. "
-                + "Schwierigkeit: " + difficulty.commandName() + ", " + rounds + " Runden, "
-                + roundSeconds + " Sekunden pro Sound, " + countdownSeconds + " Sekunden zwischen den Runden.");
+        broadcast(source.getServer(), "A Sound Guess game starts in " + lobbySeconds
+                + " seconds! Join with /minigame sound join. "
+                + "Difficulty: " + difficulty.commandName() + ", " + rounds + " rounds, "
+                + roundSeconds + " seconds per sound, " + countdownSeconds + " seconds between rounds.");
         return 1;
     }
 
@@ -136,13 +136,13 @@ public final class SoundGuessMinigame implements ServerMinigame {
         var player = source.getPlayerOrException();
         return switch (game.join(player.getUUID())) {
             case JOINED -> {
-                player.sendSystemMessage(text("Du machst mit! Der Sound ertönt in "
-                        + game.remainingSeconds() + " Sekunden. Schreibe die Antwort in den normalen Chat."));
+                player.sendSystemMessage(text("You have joined! The sound will play in "
+                        + game.remainingSeconds() + " seconds. Write your answer in public chat."));
                 yield 1;
             }
-            case ALREADY_JOINED -> error(source, "Du bist bereits angemeldet.");
-            case NO_LOBBY -> error(source, "Gerade ist keine Anmeldung offen. "
-                    + "Ein Operator startet das Event mit /minigame sound start.");
+            case ALREADY_JOINED -> error(source, "You have already joined.");
+            case NO_LOBBY -> error(source, "Signup is not open right now. "
+                    + "An operator can start a game with /minigame sound start.");
         };
     }
 
@@ -152,12 +152,12 @@ public final class SoundGuessMinigame implements ServerMinigame {
         boolean wasRunning = game.phase() == SoundGuessGame.Phase.RUNNING;
         boolean wasBetweenRounds = game.phase() == SoundGuessGame.Phase.BETWEEN_ROUNDS;
         if (!game.leave(player.getUUID())) {
-            return error(source, "Du nimmst an keinem Sound-Event teil.");
+            return error(source, "You are not taking part in a Sound Guess game.");
         }
-        player.sendSystemMessage(text("Du hast das Sound-Event verlassen."));
+        player.sendSystemMessage(text("You have left the Sound Guess game."));
         if ((wasRunning || wasBetweenRounds) && game.phase() == SoundGuessGame.Phase.IDLE) {
-            broadcast(source.getServer(), "Sound-Event beendet: Alle Teilnehmer haben verlassen."
-                    + previousRiddle.map(riddle -> " Die Antwort war: " + riddle.answer() + ".").orElse(""));
+            broadcast(source.getServer(), "Sound Guess ended: All participants have left."
+                    + previousRiddle.map(riddle -> " The answer was: " + riddle.answer() + ".").orElse(""));
         } else if (wasRunning) {
             updateReplayVoteAfterDeparture(source.getServer());
         }
@@ -168,9 +168,9 @@ public final class SoundGuessMinigame implements ServerMinigame {
         var player = source.getPlayerOrException();
         var hint = game.nextHint(player.getUUID());
         if (hint.isEmpty()) {
-            return error(source, "Tipps gibt es für Teilnehmer, sobald der Sound abgespielt wurde.");
+            return error(source, "Hints are available to participants once the sound has played.");
         }
-        player.sendSystemMessage(text("Dein Tipp: " + hint.get()));
+        player.sendSystemMessage(text("Your hint: " + hint.get()));
         return 1;
     }
 
@@ -178,29 +178,29 @@ public final class SoundGuessMinigame implements ServerMinigame {
         var player = source.getPlayerOrException();
         if (game.phase() != SoundGuessGame.Phase.RUNNING
                 || !game.participants().contains(player.getUUID())) {
-            return error(source, "Du kannst den Sound nur als Teilnehmer einer laufenden Runde wiederholen.");
+            return error(source, "You can only replay the sound while taking part in an active round.");
         }
         if (!game.requestReplay(player.getUUID())) {
-            return error(source, "Du kannst den Sound höchstens alle 5 Sekunden wiederholen.");
+            return error(source, "You can replay the sound once every 5 seconds.");
         }
         playSound(player, game.currentRiddle().orElseThrow());
-        player.sendSystemMessage(text("Der Sound wird für dich erneut abgespielt."));
+        player.sendSystemMessage(text("The sound is playing again for you."));
         return 1;
     }
 
     private int voteReplay(CommandSourceStack source) throws CommandSyntaxException {
         var player = source.getPlayerOrException();
         return switch (game.voteReplay(player.getUUID())) {
-            case NOT_RUNNING -> error(source, "Abstimmen kannst du erst während einer laufenden Runde.");
-            case NOT_PARTICIPANT -> error(source, "Nur Teilnehmer können über die Wiederholung abstimmen.");
-            case COOLDOWN -> error(source, "Die nächste Abstimmung ist in "
-                    + game.sharedReplayCooldownSeconds() + " Sekunden möglich.");
-            case ALREADY_VOTED -> error(source, "Du hast bereits für diese Wiederholung gestimmt.");
+            case NOT_RUNNING -> error(source, "You can only vote during an active round.");
+            case NOT_PARTICIPANT -> error(source, "Only participants can vote to replay the sound.");
+            case COOLDOWN -> error(source, "The next vote is available in "
+                    + game.sharedReplayCooldownSeconds() + " seconds.");
+            case ALREADY_VOTED -> error(source, "You have already voted for this replay.");
             case VOTED -> {
                 sendToParticipants(source.getServer(), player.getName().getString()
-                        + " möchte den Sound für alle wiederholen: " + game.replayVoteCount()
+                        + " wants to replay the sound for everyone: " + game.replayVoteCount()
                         + "/" + game.requiredReplayVotes()
-                        + " Stimmen. Stimme mit /minigame sound abstimmen ab.");
+                        + " votes. Vote with /minigame sound vote.");
                 yield 1;
             }
             case APPROVED -> {
@@ -212,7 +212,7 @@ public final class SoundGuessMinigame implements ServerMinigame {
 
     private void replayForAll(MinecraftServer server) {
         var riddle = game.currentRiddle().orElseThrow();
-        sendToParticipants(server, "Mehrheit erreicht! Der Sound wird für alle Teilnehmer erneut abgespielt.");
+        sendToParticipants(server, "Majority reached! The sound is playing again for all participants.");
         for (var uuid : game.participants()) {
             var player = server.getPlayerList().getPlayer(uuid);
             if (player != null) {
@@ -225,25 +225,25 @@ public final class SoundGuessMinigame implements ServerMinigame {
         if (game.consumeApprovedReplayVote()) {
             replayForAll(server);
         } else if (game.replayVoteCount() > 0) {
-            sendToParticipants(server, "Abstimmung nach Austritt aktualisiert: "
+            sendToParticipants(server, "Vote updated after a player left: "
                     + game.replayVoteCount() + "/" + game.requiredReplayVotes()
-                    + " Stimmen. Abstimmen: /minigame sound abstimmen");
+                    + " votes. Vote with /minigame sound vote");
         }
     }
 
     private int status(CommandSourceStack source) {
         String description = switch (game.phase()) {
-            case IDLE -> "Gerade läuft kein Sound-Event.";
-            case LOBBY -> "Anmeldung offen: " + game.remainingSeconds() + " Sekunden, "
-                    + game.participants().size() + " Teilnehmer, " + game.totalRounds() + " Runden ("
-                    + game.difficulty().commandName() + "). /minigame sound beitreten";
-            case BETWEEN_ROUNDS -> "Nächster Sound in " + game.remainingSeconds() + " Sekunden. Runde "
+            case IDLE -> "No Sound Guess game is running.";
+            case LOBBY -> "Signup open: " + game.remainingSeconds() + " seconds, "
+                    + game.participants().size() + " participants, " + game.totalRounds() + " rounds ("
+                    + game.difficulty().commandName() + "). /minigame sound join";
+            case BETWEEN_ROUNDS -> "Next sound in " + game.remainingSeconds() + " seconds. Round "
                     + (game.roundNumber() + 1) + "/" + game.totalRounds() + " ("
-                    + game.difficulty().commandName() + "), " + game.participants().size() + " Teilnehmer.";
-            case RUNNING -> "Runde " + game.roundNumber() + "/" + game.totalRounds() + " ("
-                    + game.difficulty().commandName() + "): " + game.remainingSeconds() + " Sekunden übrig, "
-                    + game.participants().size() + " Teilnehmer. Abstimmung zur Wiederholung: "
-                    + game.replayVoteCount() + "/" + game.requiredReplayVotes() + " Stimmen.";
+                    + game.difficulty().commandName() + "), " + game.participants().size() + " participants.";
+            case RUNNING -> "Round " + game.roundNumber() + "/" + game.totalRounds() + " ("
+                    + game.difficulty().commandName() + "): " + game.remainingSeconds() + " seconds left, "
+                    + game.participants().size() + " participants. Replay vote: "
+                    + game.replayVoteCount() + "/" + game.requiredReplayVotes() + " votes.";
         };
         source.sendSuccess(() -> text(description), false);
         return 1;
@@ -252,11 +252,11 @@ public final class SoundGuessMinigame implements ServerMinigame {
     private int stop(CommandSourceStack source) {
         var riddle = game.currentRiddle();
         if (!game.stop()) {
-            return error(source, "Gerade läuft kein Sound-Event.");
+            return error(source, "No Sound Guess game is running.");
         }
         roundSoundSeed = 0;
-        broadcast(source.getServer(), "Das Sound-Event wurde abgebrochen."
-                + riddle.map(value -> " Die Antwort war: " + value.answer() + ".").orElse(""));
+        broadcast(source.getServer(), "The Sound Guess game was canceled."
+                + riddle.map(value -> " The answer was: " + value.answer() + ".").orElse(""));
         return 1;
     }
 
@@ -270,25 +270,25 @@ public final class SoundGuessMinigame implements ServerMinigame {
             case STARTED -> {
                 roundSoundSeed = ThreadLocalRandom.current().nextLong();
                 var riddle = game.currentRiddle().orElseThrow();
-                broadcast(server, "Runde " + game.roundNumber() + "/" + game.totalRounds() + " ("
-                        + game.difficulty().commandName() + ") beginnt mit " + game.participants().size()
-                        + " Teilnehmern! Die erste richtige Antwort im Chat gewinnt.");
+                broadcast(server, "Round " + game.roundNumber() + "/" + game.totalRounds() + " ("
+                        + game.difficulty().commandName() + ") starts with " + game.participants().size()
+                        + " participants! The first correct answer in chat wins.");
                 for (var uuid : game.participants()) {
                     var player = server.getPlayerList().getPlayer(uuid);
                     if (player != null) {
-                        player.sendSystemMessage(text("Hör genau hin! Du hast "
-                                + game.remainingSeconds() + " Sekunden. "
-                                + "Hilfe: /minigame sound tipp | Persönlich wiederholen: /minigame sound nochmal"
-                                + " | Für alle abstimmen: /minigame sound abstimmen"));
+                        player.sendSystemMessage(text("Listen carefully! You have "
+                                + game.remainingSeconds() + " seconds. "
+                                + "Hint: /minigame sound hint | Private replay: /minigame sound replay"
+                                + " | Vote to replay for everyone: /minigame sound vote"));
                         playSound(player, riddle);
                     }
                 }
             }
             case NO_PARTICIPANTS -> broadcast(server,
-                    "Das Sound-Event wurde abgesagt: Niemand hat sich angemeldet.");
+                    "Sound Guess canceled: Nobody joined.");
             case TIMED_OUT -> {
-                broadcast(server, "Runde " + completedRound + "/" + totalRounds
-                        + ": Die Zeit ist um! Niemand hat gewonnen. Die Antwort war: "
+                broadcast(server, "Round " + completedRound + "/" + totalRounds
+                        + ": Time is up! Nobody won. The answer was: "
                         + previousRiddle.orElseThrow().answer() + ".");
                 announceRoundTransition(server, totalRounds);
             }
@@ -299,10 +299,10 @@ public final class SoundGuessMinigame implements ServerMinigame {
                 }
                 if ((game.phase() == SoundGuessGame.Phase.LOBBY
                         || game.phase() == SoundGuessGame.Phase.BETWEEN_ROUNDS) && seconds <= 5) {
-                    sendToParticipants(server, "Der Sound ertönt in " + seconds + " Sekunden …");
+                    sendToParticipants(server, "The sound will play in " + seconds + " seconds ...");
                 } else if (game.phase() == SoundGuessGame.Phase.RUNNING
                         && (seconds == 30 || seconds == 10 || seconds <= 5)) {
-                    sendToParticipants(server, "Noch " + seconds + " Sekunden!");
+                    sendToParticipants(server, "Only " + seconds + " seconds left!");
                 }
             }
         }
@@ -314,8 +314,8 @@ public final class SoundGuessMinigame implements ServerMinigame {
         int roundNumber = game.roundNumber();
         int totalRounds = game.totalRounds();
         if (game.guess(player.getUUID(), message)) {
-            broadcast(server, player.getName().getString() + " gewinnt Runde " + roundNumber + "/"
-                    + totalRounds + "! Die Antwort war: "
+            broadcast(server, player.getName().getString() + " wins round " + roundNumber + "/"
+                    + totalRounds + "! The answer was: "
                     + riddle.orElseThrow().answer() + ".");
             announceRoundTransition(server, totalRounds);
         }
@@ -324,11 +324,11 @@ public final class SoundGuessMinigame implements ServerMinigame {
     private void announceRoundTransition(MinecraftServer server, int totalRounds) {
         roundSoundSeed = 0;
         if (game.phase() == SoundGuessGame.Phase.BETWEEN_ROUNDS) {
-            broadcast(server, "Runde " + (game.roundNumber() + 1) + "/" + totalRounds + " startet in "
-                    + game.remainingSeconds() + " Sekunden. Alle Teilnehmer bleiben angemeldet.");
+            broadcast(server, "Round " + (game.roundNumber() + 1) + "/" + totalRounds + " starts in "
+                    + game.remainingSeconds() + " seconds. All participants stay in the game.");
         } else {
-            broadcast(server, "Das Sound-Event ist beendet (" + totalRounds
-                    + (totalRounds == 1 ? " Runde)." : " Runden)."));
+            broadcast(server, "The Sound Guess game has ended (" + totalRounds
+                    + (totalRounds == 1 ? " round)." : " rounds)."));
         }
     }
 
@@ -341,8 +341,8 @@ public final class SoundGuessMinigame implements ServerMinigame {
             return;
         }
         if ((wasRunning || wasBetweenRounds) && game.phase() == SoundGuessGame.Phase.IDLE) {
-            broadcast(server, "Sound-Event beendet: Kein Teilnehmer mehr online."
-                    + riddle.map(value -> " Die Antwort war: " + value.answer() + ".").orElse(""));
+            broadcast(server, "Sound Guess ended: No participants are online."
+                    + riddle.map(value -> " The answer was: " + value.answer() + ".").orElse(""));
         } else if (wasRunning) {
             updateReplayVoteAfterDeparture(server);
         }
@@ -380,7 +380,7 @@ public final class SoundGuessMinigame implements ServerMinigame {
     }
 
     private static Component text(String message) {
-        return Component.literal("[Sound-Rätsel] ").withStyle(ChatFormatting.GOLD)
+        return Component.literal("[Sound Guess] ").withStyle(ChatFormatting.GOLD)
                 .append(Component.literal(message).withStyle(ChatFormatting.YELLOW));
     }
 }

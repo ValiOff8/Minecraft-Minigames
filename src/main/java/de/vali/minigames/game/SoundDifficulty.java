@@ -2,25 +2,25 @@ package de.vali.minigames.game;
 
 /** Disjoint sound pools, or a mixture of every pool. */
 public enum SoundDifficulty {
-    EASY("leicht", "easy"),
+    EASY("easy", "leicht"),
     NORMAL("normal", "normal"),
-    HARD("schwer", "hard"),
-    MIXED("gemischt", "mixed");
+    HARD("hard", "schwer"),
+    MIXED("mixed", "gemischt");
 
     private final String commandName;
-    private final String englishName;
+    private final String germanName;
 
-    SoundDifficulty(String commandName, String englishName) {
+    SoundDifficulty(String commandName, String germanName) {
         this.commandName = commandName;
-        this.englishName = englishName;
+        this.germanName = germanName;
     }
 
     public String commandName() {
         return commandName;
     }
 
-    public String englishName() {
-        return englishName;
+    public String germanName() {
+        return germanName;
     }
 
     public boolean includes(SoundRiddle riddle) {

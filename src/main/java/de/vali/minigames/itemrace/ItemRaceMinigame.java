@@ -20,6 +20,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
@@ -43,18 +44,18 @@ public final class ItemRaceMinigame implements ServerMinigame {
 
     @Override
     public LiteralArgumentBuilder<CommandSourceStack> commands() {
-        var itemCount = Commands.argument("anzahl",
+        var itemCount = Commands.argument("item_count",
                         IntegerArgumentType.integer(ItemRaceCatalog.MIN_ITEMS, ItemRaceCatalog.MAX_ITEMS))
                 .executes(context -> start(context, ItemRaceDifficulty.EASY,
-                        IntegerArgumentType.getInteger(context, "anzahl")));
-        var secondPlayer = Commands.argument("spieler2", EntityArgument.player())
+                        IntegerArgumentType.getInteger(context, "item_count")));
+        var secondPlayer = Commands.argument("player2", EntityArgument.player())
                 .executes(context -> start(context, ItemRaceDifficulty.EASY, ItemRaceCatalog.DEFAULT_ITEMS));
         for (var option : ItemRaceDifficulty.values()) {
-            var names = option.commandName().equals(option.englishName())
-                    ? List.of(option.commandName()) : List.of(option.commandName(), option.englishName());
+            var names = option.commandName().equals(option.germanName())
+                    ? List.of(option.commandName()) : List.of(option.commandName(), option.germanName());
             for (var name : names) {
                 itemCount.then(Commands.literal(name).executes(context -> start(context, option,
-                        IntegerArgumentType.getInteger(context, "anzahl"))));
+                        IntegerArgumentType.getInteger(context, "item_count"))));
                 secondPlayer.then(Commands.literal(name).executes(context ->
                         start(context, option, ItemRaceCatalog.DEFAULT_ITEMS)));
             }
@@ -64,7 +65,7 @@ public final class ItemRaceMinigame implements ServerMinigame {
                 .executes(context -> help(context.getSource()))
                 .then(Commands.literal("start")
                         .requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
-                        .then(Commands.argument("spieler1", EntityArgument.player()).then(secondPlayer)))
+                        .then(Commands.argument("player1", EntityArgument.player()).then(secondPlayer)))
                 .then(Commands.literal("liste").executes(context -> list(context.getSource())))
                 .then(Commands.literal("list").executes(context -> list(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
@@ -76,11 +77,11 @@ public final class ItemRaceMinigame implements ServerMinigame {
     }
 
     private int help(CommandSourceStack source) {
-        source.sendSuccess(() -> text("Sammelt als Erste alle Items derselben Zufallsliste! "
-                + "Operator: /minigame itemrace start <Spieler1> <Spieler2> [Anzahl] [Schwierigkeit]. "
-                + "Anzahl: 1–30 (Standard: 5). Schwierigkeit: leicht (Standard), normal, schwer oder gemischt. "
-                + "Weitere Befehle: liste | status | verlassen | stop (Operator). "
-                + "Beispiel: /minigame itemrace start Alice Bob 10 normal"), false);
+        source.sendSuccess(() -> text("Be the first to collect every item on a shared random list! "
+                + "Operator: /minigame itemrace start <player1> <player2> [item_count] [difficulty]. "
+                + "Items: 1–30 (default: 5). Difficulty: easy (default), normal, hard, or mixed. "
+                + "Other commands: list | status | leave | stop (operator). "
+                + "Example: /minigame itemrace start Alice Bob 10 normal"), false);
         return 1;
     }
 
@@ -88,29 +89,29 @@ public final class ItemRaceMinigame implements ServerMinigame {
             int itemCount) throws CommandSyntaxException {
         var source = context.getSource();
         if (game.running()) {
-            return error(source, "Es läuft bereits ein Item-Rennen. Nutze /minigame itemrace status.");
+            return error(source, "An Item Race is already running. Use /minigame itemrace status.");
         }
-        var first = EntityArgument.getPlayer(context, "spieler1");
-        var second = EntityArgument.getPlayer(context, "spieler2");
+        var first = EntityArgument.getPlayer(context, "player1");
+        var second = EntityArgument.getPlayer(context, "player2");
         if (first.getUUID().equals(second.getUUID())) {
-            return error(source, "Wähle zwei verschiedene Spieler aus.");
+            return error(source, "Choose two different players.");
         }
         if (!availableInSurvival(first) || !availableInSurvival(second)
                 || !first.isAlive() || !second.isAlive()) {
-            return error(source, "Beide Spieler müssen online und lebend im Überlebensmodus sein.");
+            return error(source, "Both players must be online and alive in Survival mode.");
         }
         var targets = ItemRaceCatalog.select(selectedDifficulty, itemCount, random);
         game.start(first.getUUID(), second.getUUID(), targets);
         difficulty = selectedDifficulty;
         playerNames.put(first.getUUID(), first.getName().getString());
         playerNames.put(second.getUUID(), second.getName().getString());
-        broadcast(source.getServer(), first.getName().getString() + " gegen " + second.getName().getString()
-                + ": Das Item-Rennen beginnt! " + itemCount + " Items, Schwierigkeit: "
-                + difficulty.commandName() + ". Wer zuerst alle gesammelt hat, gewinnt!");
+        broadcast(source.getServer(), first.getName().getString() + " versus " + second.getName().getString()
+                + ": The Item Race begins! " + itemCount + " items, difficulty: "
+                + difficulty.commandName() + ". The first to collect them all wins!");
         for (var player : new ServerPlayer[]{first, second}) {
-            player.sendSystemMessage(text("Pro Item genügt ein Exemplar im Inventar. "
-                    + "Vorhandene Items zählen mit; gesammelte Items bleiben abgehakt. "
-                    + "Deine Liste: /minigame itemrace liste."));
+            player.sendSystemMessage(text("One of each item in your inventory is enough. "
+                    + "Existing items count; collected items stay checked off. "
+                    + "Your list: /minigame itemrace list."));
             sendList(player);
         }
         return 1;
@@ -119,7 +120,7 @@ public final class ItemRaceMinigame implements ServerMinigame {
     private int list(CommandSourceStack source) throws CommandSyntaxException {
         var player = source.getPlayerOrException();
         if (!game.isParticipant(player.getUUID())) {
-            return error(source, "Du nimmst gerade an keinem Item-Rennen teil.");
+            return error(source, "You are not taking part in an Item Race.");
         }
         sendList(player);
         return 1;
@@ -127,7 +128,7 @@ public final class ItemRaceMinigame implements ServerMinigame {
 
     private void sendList(ServerPlayer player) {
         var collected = game.collected(player.getUUID());
-        player.sendSystemMessage(text("Deine Sammelliste (" + collected.size() + "/" + game.targets().size()
+        player.sendSystemMessage(text("Your collection list (" + collected.size() + "/" + game.targets().size()
                 + ", " + difficulty.commandName() + "):"));
         int index = 1;
         for (var itemId : game.targets()) {
@@ -139,31 +140,31 @@ public final class ItemRaceMinigame implements ServerMinigame {
 
     private int status(CommandSourceStack source) {
         if (!game.running()) {
-            source.sendSuccess(() -> text("Gerade läuft kein Item-Rennen."), false);
+            source.sendSuccess(() -> text("No Item Race is running."), false);
             return 1;
         }
-        source.sendSuccess(() -> text("Item-Rennen: " + game.targets().size() + " Items, Schwierigkeit: "
+        source.sendSuccess(() -> text("Item Race: " + game.targets().size() + " items, difficulty: "
                 + difficulty.commandName() + ". " + String.join(" | ", game.participants().stream()
                 .map(id -> playerNames.get(id) + ": " + game.collected(id).size() + "/" + game.targets().size())
-                .toList()) + ". Eigene Liste: /minigame itemrace liste."), false);
+                .toList()) + ". Your list: /minigame itemrace list."), false);
         return 1;
     }
 
     private int leave(CommandSourceStack source) throws CommandSyntaxException {
         var player = source.getPlayerOrException();
         if (!game.isParticipant(player.getUUID())) {
-            return error(source, "Du nimmst gerade an keinem Item-Rennen teil.");
+            return error(source, "You are not taking part in an Item Race.");
         }
-        finish(source.getServer(), "Item-Rennen abgebrochen: " + player.getName().getString()
-                + " hat das Spiel verlassen.");
+        finish(source.getServer(), "Item Race canceled: " + player.getName().getString()
+                + " left the game.");
         return 1;
     }
 
     private int stop(CommandSourceStack source) {
         if (!game.running()) {
-            return error(source, "Gerade läuft kein Item-Rennen.");
+            return error(source, "No Item Race is running.");
         }
-        finish(source.getServer(), "Das Item-Rennen wurde vom Operator abgebrochen.");
+        finish(source.getServer(), "The Item Race was canceled by an operator.");
         return 1;
     }
 
@@ -177,8 +178,8 @@ public final class ItemRaceMinigame implements ServerMinigame {
         for (var id : game.participants()) {
             var player = server.getPlayerList().getPlayer(id);
             if (player == null || !availableInSurvival(player)) {
-                finish(server, "Item-Rennen abgebrochen: " + playerNames.get(id)
-                        + " ist nicht mehr online oder im Überlebensmodus.");
+                finish(server, "Item Race canceled: " + playerNames.get(id)
+                        + " is no longer online or in Survival mode.");
                 return;
             }
             players.put(id, player);
@@ -190,17 +191,17 @@ public final class ItemRaceMinigame implements ServerMinigame {
             }
             var found = game.collect(entry.getKey(), inventoryItemIds(player.getInventory()));
             for (var itemId : found) {
-                player.sendSystemMessage(text(Component.literal("Gesammelt: ").append(itemName(itemId))
+                player.sendSystemMessage(text(Component.literal("Collected: ").append(itemName(itemId))
                         .append(" (" + game.collected(entry.getKey()).size() + "/" + game.targets().size() + ").")));
             }
         }
         // Check both players together: the iteration order must never decide a same-tick finish.
         var finishers = game.finishers();
         if (finishers.size() == 2) {
-            finish(server, "Unentschieden! Beide Spieler haben ihre Liste im selben Server-Tick vervollständigt.");
+            finish(server, "Draw! Both players completed their lists in the same server tick.");
         } else if (finishers.size() == 1) {
-            finish(server, playerNames.get(finishers.iterator().next()) + " gewinnt das Item-Rennen! Alle "
-                    + game.targets().size() + " Items wurden gesammelt.");
+            finish(server, playerNames.get(finishers.iterator().next()) + " wins the Item Race! All "
+                    + game.targets().size() + " items have been collected.");
         }
     }
 
@@ -223,8 +224,8 @@ public final class ItemRaceMinigame implements ServerMinigame {
     @Override
     public void onDisconnect(MinecraftServer server, ServerPlayer player) {
         if (game.isParticipant(player.getUUID())) {
-            finish(server, "Item-Rennen abgebrochen: " + player.getName().getString()
-                    + " hat den Server verlassen.");
+            finish(server, "Item Race canceled: " + player.getName().getString()
+                    + " left the server.");
         }
     }
 
@@ -245,9 +246,10 @@ public final class ItemRaceMinigame implements ServerMinigame {
         broadcast(server, message);
     }
 
-    private static Component itemName(String itemId) {
-        return BuiltInRegistries.ITEM.get(Identifier.parse(itemId)).orElseThrow()
-                .value().getDefaultInstance().getHoverName();
+    static Component itemName(String itemId) {
+        var item = BuiltInRegistries.ITEM.get(Identifier.parse(itemId)).orElseThrow().value();
+        // Resolve on the server so a client's language cannot change the displayed name.
+        return Component.literal(Language.DEFAULT_INSTANCE.getOrDefault(item.getDescriptionId()));
     }
 
     private static void broadcast(MinecraftServer server, String message) {
@@ -264,7 +266,7 @@ public final class ItemRaceMinigame implements ServerMinigame {
     }
 
     private static MutableComponent text(Component message) {
-        return Component.literal("[Item-Rennen] ").withStyle(ChatFormatting.GREEN)
+        return Component.literal("[Item Race] ").withStyle(ChatFormatting.GREEN)
                 .append(Component.empty().withStyle(ChatFormatting.YELLOW).append(message));
     }
 }

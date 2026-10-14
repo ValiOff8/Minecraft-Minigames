@@ -25,7 +25,7 @@ You need a dedicated Minecraft **26.3** server, **Java 25**, **Fabric Loader 0.1
    ./gradlew build
    ```
 
-3. Copy `build/libs/server-minigames-1.4.0.jar` and the matching Fabric API JAR into your server's `mods/` folder.
+3. Copy `build/libs/server-minigames-1.4.1.jar` and the matching Fabric API JAR into your server's `mods/` folder.
 4. Restart the server. When updating, replace the old mod JAR. Do not install the `-sources.jar`.
 
 ## Getting started
@@ -34,7 +34,19 @@ Use `/minigame` to list the games, or `/minigame <game>` for help.
 
 All `start` and `stop` commands require operator level 2 or the server console. Player commands are available to everyone. In the console, omit the leading `/`.
 
-Sound Guess and Item Race support `easy`, `normal`, `hard`, and `mixed` difficulty. `mixed` combines all difficulty pools. German command aliases also work. In-game help and messages are currently in German.
+All mod messages, hints, revealed answers, and Item Race item names are displayed in English, regardless of the client's language. Commands and Sound Guess answers accept both English and German input.
+
+Sound Guess and Item Race support `easy`, `normal`, `hard`, and `mixed` difficulty. `mixed` combines all difficulty pools. The German names `leicht`, `normal`, `schwer`, and `gemischt` also work.
+
+| English command | German alias |
+| --- | --- |
+| `join` (Sound Guess) | `beitreten` |
+| `leave` (all games) | `verlassen` |
+| `hint` (Sound Guess) | `tipp` |
+| `replay` (Sound Guess) | `nochmal` |
+| `vote` (Sound Guess) | `abstimmen` |
+| `ready` (Hide and Seek) | `bereit` |
+| `list` (Item Race) | `liste` |
 
 ## Sound Guess
 

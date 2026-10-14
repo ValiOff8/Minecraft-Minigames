@@ -16,14 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ItemRaceCatalogTest {
     @Test
     void difficultyNamesSupportGermanAndEnglishCommands() {
-        assertEquals("leicht", ItemRaceDifficulty.EASY.commandName());
-        assertEquals("easy", ItemRaceDifficulty.EASY.englishName());
+        assertEquals("leicht", ItemRaceDifficulty.EASY.germanName());
+        assertEquals("easy", ItemRaceDifficulty.EASY.commandName());
+        assertEquals("normal", ItemRaceDifficulty.NORMAL.germanName());
         assertEquals("normal", ItemRaceDifficulty.NORMAL.commandName());
-        assertEquals("normal", ItemRaceDifficulty.NORMAL.englishName());
-        assertEquals("schwer", ItemRaceDifficulty.HARD.commandName());
-        assertEquals("hard", ItemRaceDifficulty.HARD.englishName());
-        assertEquals("gemischt", ItemRaceDifficulty.MIXED.commandName());
-        assertEquals("mixed", ItemRaceDifficulty.MIXED.englishName());
+        assertEquals("schwer", ItemRaceDifficulty.HARD.germanName());
+        assertEquals("hard", ItemRaceDifficulty.HARD.commandName());
+        assertEquals("gemischt", ItemRaceDifficulty.MIXED.germanName());
+        assertEquals("mixed", ItemRaceDifficulty.MIXED.commandName());
     }
 
     @Test

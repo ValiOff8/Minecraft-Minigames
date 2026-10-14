@@ -2,24 +2,24 @@ package de.vali.minigames.game;
 
 /** Disjoint survival item pools, or a mixture of every pool. */
 public enum ItemRaceDifficulty {
-    EASY("leicht", "easy"),
+    EASY("easy", "leicht"),
     NORMAL("normal", "normal"),
-    HARD("schwer", "hard"),
-    MIXED("gemischt", "mixed");
+    HARD("hard", "schwer"),
+    MIXED("mixed", "gemischt");
 
     private final String commandName;
-    private final String englishName;
+    private final String germanName;
 
-    ItemRaceDifficulty(String commandName, String englishName) {
+    ItemRaceDifficulty(String commandName, String germanName) {
         this.commandName = commandName;
-        this.englishName = englishName;
+        this.germanName = germanName;
     }
 
     public String commandName() {
         return commandName;
     }
 
-    public String englishName() {
-        return englishName;
+    public String germanName() {
+        return germanName;
     }
 }
